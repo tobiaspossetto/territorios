@@ -275,7 +275,9 @@ export default function App() {
     id: 'terr-label-near', type: 'symbol', minzoom: 15,
     layout: {
       'text-field': ['get', 'territorio'], 'text-font': ['Noto Sans Bold'], 'text-size': 18,
-      'text-allow-overlap': true, 'text-ignore-placement': true,
+      'text-allow-overlap': true,          // el nro de territorio siempre se ve
+      'text-ignore-placement': false,      // pero reserva su lugar -> las manzanas lo esquivan
+      'text-padding': 6,
     },
     paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3.8, 'text-halo-blur': 0.4 },
   }
@@ -302,12 +304,23 @@ export default function App() {
     id: 'manz-label', type: 'symbol', minzoom: 15,
     // con un territorio seleccionado, ocultar los números de manzana del resto (solo se ve el seleccionado)
     filter: selected ? ['==', ['get', 'territorio'], ' __none__'] : ['has', 'territorio'],
-    layout: { 'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 15, 'text-allow-overlap': false },
+    layout: {
+      'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 15,
+      'text-allow-overlap': false,
+      // si choca (ej. con el nro de territorio) se corre a un costado en vez de ocultarse
+      'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+      'text-radial-offset': 0.8, 'text-justify': 'auto',
+    },
     paint: { 'text-color': lblTxt, 'text-halo-color': lblHalo, 'text-halo-width': 2.4 },
   }
   const manzLabelSel = {
     id: 'manz-label-sel', type: 'symbol', filter: ['==', ['get', 'territorio'], sel],
-    layout: { 'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 16, 'text-allow-overlap': true },
+    layout: {
+      'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 16,
+      'text-allow-overlap': false,
+      'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
+      'text-radial-offset': 0.8, 'text-justify': 'auto',
+    },
     paint: { 'text-color': lblTxt, 'text-halo-color': lblHalo, 'text-halo-width': 2.6 },
   }
 
@@ -348,17 +361,17 @@ export default function App() {
           </Source>
         )}
         {/* labels arriba de todo */}
-        {/* manzanas primero, territorio DESPUÉS -> el nro de territorio queda arriba */}
-        {manzLabels && (
-          <Source id="manz-lbl" type="geojson" data={manzLabels}>
-            <Layer {...manzLabel} />
-            <Layer {...manzLabelSel} />
-          </Source>
-        )}
+        {/* territorio PRIMERO: reserva su lugar y las manzanas ceden ese espacio */}
         {terrLabels && (
           <Source id="terr-lbl" type="geojson" data={terrLabels}>
             <Layer {...terrLabelFar} />
             <Layer {...terrLabelNear} />
+          </Source>
+        )}
+        {manzLabels && (
+          <Source id="manz-lbl" type="geojson" data={manzLabels}>
+            <Layer {...manzLabel} />
+            <Layer {...manzLabelSel} />
           </Source>
         )}
       </Map>

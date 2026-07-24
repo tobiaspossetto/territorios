@@ -277,7 +277,7 @@ export default function App() {
       'text-field': ['get', 'territorio'], 'text-font': ['Noto Sans Bold'], 'text-size': 18,
       'text-allow-overlap': true, 'text-ignore-placement': true,
     },
-    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3 },
+    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3.8, 'text-halo-blur': 0.4 },
   }
 
   // --- capa MANZANAS ---
@@ -348,16 +348,17 @@ export default function App() {
           </Source>
         )}
         {/* labels arriba de todo */}
-        {terrLabels && (
-          <Source id="terr-lbl" type="geojson" data={terrLabels}>
-            <Layer {...terrLabelFar} />
-            <Layer {...terrLabelNear} />
-          </Source>
-        )}
+        {/* manzanas primero, territorio DESPUÉS -> el nro de territorio queda arriba */}
         {manzLabels && (
           <Source id="manz-lbl" type="geojson" data={manzLabels}>
             <Layer {...manzLabel} />
             <Layer {...manzLabelSel} />
+          </Source>
+        )}
+        {terrLabels && (
+          <Source id="terr-lbl" type="geojson" data={terrLabels}>
+            <Layer {...terrLabelFar} />
+            <Layer {...terrLabelNear} />
           </Source>
         )}
       </Map>

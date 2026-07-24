@@ -165,14 +165,15 @@ export default function App() {
   }
 
   // selecciona un territorio (usado por click en mapa, buscador y deep-link)
-  const selectTerr = useCallback((id) => {
+  const selectTerr = useCallback((id, opts = {}) => {
     const feat = terr && terr.features.find(x => x.properties.territorio === id)
     if (!feat) return
     setSelected(id)
     setPopup({ ...feat.properties })
     setUrlTerr(id)
-    if (mapRef.current) mapRef.current.fitBounds(bboxOf(feat.geometry),
-      { padding: { top: 140, bottom: 70, left: 40, right: 40 }, maxZoom: 16.5, duration: 650 })
+    const cam = { padding: { top: 140, bottom: 70, left: 40, right: 40 }, maxZoom: 16.5, duration: 650 }
+    if (opts.tilt) { cam.pitch = 50; cam.bearing = -16; cam.duration = 950 }  // vista 3D leve (deep-link)
+    if (mapRef.current) mapRef.current.fitBounds(bboxOf(feat.geometry), cam)
   }, [terr])
 
   const clearTerr = useCallback(() => { setSelected(null); setPopup(null); setUrlTerr(null) }, [])
@@ -190,7 +191,7 @@ export default function App() {
     deepLinkDone.current = true
     try {
       const id = new URL(window.location.href).searchParams.get('t')
-      if (id && terr.features.some(f => f.properties.territorio === id)) selectTerr(id)
+      if (id && terr.features.some(f => f.properties.territorio === id)) selectTerr(id, { tilt: true })
     } catch (e) {}
   }, [terr, mapLoaded, selectTerr])
 

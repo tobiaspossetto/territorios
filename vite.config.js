@@ -8,8 +8,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',   // al redeployar, actualiza solo (no queda pegada versión vieja)
-      injectRegister: 'auto',
+      registerType: 'prompt',   // registro manual en main.jsx -> auto-aplica y recarga al haber versión nueva
+      injectRegister: null,
       includeAssets: ['icono.png'],
       manifest: {
         name: 'Congregación Este, SF',
@@ -29,6 +29,8 @@ export default defineConfig({
         // precachea shell + datos (geojson) + base offline (pmtiles) + glyphs (pbf)
         globPatterns: ['**/*.{js,css,html,png,svg,geojson,webmanifest,pmtiles,pbf}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        skipWaiting: true,      // activa el SW nuevo al toque
+        clientsClaim: true,     // toma control de la pestaña sin esperar
       },
       devOptions: { enabled: false },   // SW solo en build/prod -> dev y validación local sin cambios
     }),

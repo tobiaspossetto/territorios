@@ -309,7 +309,7 @@ export default function App() {
       'text-allow-overlap': false,
       // si choca (ej. con el nro de territorio) se corre a un costado en vez de ocultarse
       'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
-      'text-radial-offset': 0.8, 'text-justify': 'auto',
+      'text-radial-offset': 1.2, 'text-justify': 'auto',
     },
     paint: { 'text-color': lblTxt, 'text-halo-color': lblHalo, 'text-halo-width': 2.4 },
   }
@@ -319,7 +319,7 @@ export default function App() {
       'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 16,
       'text-allow-overlap': false,
       'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'],
-      'text-radial-offset': 0.8, 'text-justify': 'auto',
+      'text-radial-offset': 1.2, 'text-justify': 'auto',
     },
     paint: { 'text-color': lblTxt, 'text-halo-color': lblHalo, 'text-halo-width': 2.6 },
   }

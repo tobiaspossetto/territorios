@@ -89,6 +89,7 @@ export default function App() {
   const [selected, setSelected] = useState(null)     // territorio id
   const [geoError, setGeoError] = useState(null)
   const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  const [mapLoaded, setMapLoaded] = useState(false)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
   const [showGuide, setShowGuide] = useState(() => { try { return !localStorage.getItem('guideSeen') } catch (e) { return true } })
@@ -182,15 +183,16 @@ export default function App() {
     selectTerr(f.properties.territorio)
   }, [selectTerr, clearTerr])
 
-  // deep-link: al cargar datos, si la URL trae ?t=T52 abrir ese territorio
+  // deep-link: cuando mapa Y datos están listos, si la URL trae ?t=T52 abrir ese
+  // territorio (después del fitAll inicial, para que el zoom no se pise)
   useEffect(() => {
-    if (!terr || deepLinkDone.current) return
+    if (!terr || !mapLoaded || deepLinkDone.current) return
     deepLinkDone.current = true
     try {
       const id = new URL(window.location.href).searchParams.get('t')
-      if (id) setTimeout(() => selectTerr(id), 400)
+      if (id && terr.features.some(f => f.properties.territorio === id)) selectTerr(id)
     } catch (e) {}
-  }, [terr, selectTerr])
+  }, [terr, mapLoaded, selectTerr])
 
   // compartir el territorio activo por WhatsApp con link directo
   const shareTerr = useCallback(() => {
@@ -316,7 +318,7 @@ export default function App() {
         initialViewState={{ longitude: -62.03, latitude: -31.43, zoom: 12, pitch: 0, bearing: 0 }}
         interactiveLayerIds={['terr-fill']}
         onClick={onClick}
-        onLoad={() => { if (mapRef.current) { mapRef.current.resize(); if (import.meta.env.DEV) window.__map = mapRef.current.getMap() } fitAll(); ready.current.map = true; hideSplash() }}
+        onLoad={() => { if (mapRef.current) { mapRef.current.resize(); if (import.meta.env.DEV) window.__map = mapRef.current.getMap() } fitAll(); ready.current.map = true; setMapLoaded(true); hideSplash() }}
         maxPitch={70}
         dragRotate
         pitchWithRotate

@@ -8,6 +8,7 @@ import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
 import Guide from './Guide.jsx'
 import Buscador from './Buscador.jsx'
+import { bordeConCalles } from './calles.js'
 import { IconMap, IconChart, IconSun, IconMoon, IconLogo, IconWhatsapp } from './icons.jsx'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
@@ -90,6 +91,7 @@ export default function App() {
   const [geoError, setGeoError] = useState(null)
   const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [bordeCalles, setBordeCalles] = useState(null)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
   const [showGuide, setShowGuide] = useState(() => { try { return !localStorage.getItem('guideSeen') } catch (e) { return true } })
@@ -203,6 +205,32 @@ export default function App() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }, [popup])
 
+  // calles limítrofes: al seleccionar (y cuando el mapa quedó quieto), leer las
+  // etiquetas de calle ya renderizadas y rotular cada lado del territorio
+  useEffect(() => {
+    const map = mapRef.current && mapRef.current.getMap ? mapRef.current.getMap() : null
+    if (!map || !selected || !terr || !online) { setBordeCalles(null); return }
+    const feat = terr.features.find((f) => f.properties.territorio === selected)
+    if (!feat) { setBordeCalles(null); return }
+    let cancelled = false
+    const compute = () => {
+      if (cancelled) return
+      // fuente vector del mapa base (MapTiler); leemos la geometría de calles con
+      // nombre directo del tile (no depende de que el label esté dibujado)
+      let srcId = 'maptiler_planet'
+      try {
+        const nl = map.getStyle().layers.find((l) => l['source-layer'] === 'transportation_name')
+        if (nl && nl.source) srcId = nl.source
+      } catch (e) {}
+      let roads = []
+      try { roads = map.querySourceFeatures(srcId, { sourceLayer: 'transportation_name' }) } catch (e) {}
+      const fc = bordeConCalles(feat.geometry, roads)
+      if (!cancelled) setBordeCalles(fc)
+    }
+    map.once('idle', compute)
+    return () => { cancelled = true; map.off('idle', compute) }
+  }, [selected, terr, mapLoaded, online])
+
   const closeGuide = useCallback(() => {
     if (dontShow) { try { localStorage.setItem('guideSeen', '1') } catch (e) {} }
     setShowGuide(false)
@@ -280,6 +308,20 @@ export default function App() {
       'text-padding': 6,
     },
     paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3.8, 'text-halo-blur': 0.4 },
+  }
+
+  // --- calles limítrofes (label sobre cada lado del contorno) ---
+  const calleLabel = {
+    id: 'calle-borde-label', type: 'symbol',
+    layout: {
+      'symbol-placement': 'line-center',    // una sola etiqueta, centrada en el lado
+      'text-field': ['get', 'calle'],
+      'text-font': ['Noto Sans Bold'],
+      'text-size': 14,
+      'text-allow-overlap': true, 'text-ignore-placement': true,
+      'text-letter-spacing': 0.02,
+    },
+    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3 },
   }
 
   // --- capa MANZANAS ---
@@ -374,6 +416,11 @@ export default function App() {
           <Source id="manz-lbl" type="geojson" data={manzLabels}>
             <Layer {...manzLabel} />
             <Layer {...manzLabelSel} />
+          </Source>
+        )}
+        {bordeCalles && bordeCalles.features.length > 0 && (
+          <Source id="calles-borde" type="geojson" data={bordeCalles}>
+            <Layer {...calleLabel} />
           </Source>
         )}
       </Map>

@@ -31,6 +31,20 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         skipWaiting: true,      // activa el SW nuevo al toque
         clientsClaim: true,     // toma control de la pestaña sin esperar
+        // Cachea los tiles/glyphs de MapTiler: el mapa base no cambia, así que se
+        // sirven del disco y no consumen cuota. Caché aparte del de la app: los
+        // deploys de datos/código actualizan igual.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/api\.maptiler\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'maptiler-tiles-v1',
+              expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 45 },  // 45 días
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },   // SW solo en build/prod -> dev y validación local sin cambios
     }),

@@ -172,7 +172,7 @@ export default function App() {
     setPopup({ ...feat.properties })
     setUrlTerr(id)
     const cam = { padding: { top: 140, bottom: 70, left: 40, right: 40 }, maxZoom: 16.5, duration: 650 }
-    if (opts.tilt) { cam.pitch = 50; cam.bearing = -16; cam.duration = 950 }  // vista 3D leve (deep-link)
+    if (opts.tilt) { cam.pitch = 38; cam.bearing = -16; cam.duration = 950 }  // vista 3D leve (deep-link)
     if (mapRef.current) mapRef.current.fitBounds(bboxOf(feat.geometry), cam)
   }, [terr])
 
@@ -333,7 +333,9 @@ export default function App() {
         interactiveLayerIds={['terr-fill']}
         onClick={onClick}
         onLoad={() => { if (mapRef.current) { mapRef.current.resize(); if (import.meta.env.DEV) window.__map = mapRef.current.getMap() } fitAll(); ready.current.map = true; setMapLoaded(true); hideSplash() }}
-        maxPitch={70}
+        minZoom={12}
+        maxZoom={20}
+        maxPitch={40}
         dragRotate
         pitchWithRotate
         touchZoomRotate

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { metricColor, METRIC_LEGEND } from './theme.js'
+import { IconInfo } from './icons.jsx'
 
 function fmtFecha(iso) {
   if (!iso) return null
@@ -11,6 +12,7 @@ export default function MetricaPanel({ data, theme, meta }) {
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem('metricaOpen') !== '0' } catch (e) { return true }
   })
+  const [infoOpen, setInfoOpen] = useState(false)
   const setOpenP = (v) => { try { localStorage.setItem('metricaOpen', v ? '1' : '0') } catch (e) {}; setOpen(v) }
   const dragY = useRef(null)
 
@@ -31,6 +33,13 @@ export default function MetricaPanel({ data, theme, meta }) {
   const feats = data.features.map((f) => f.properties)
   const total = feats.length
   const completados = feats.filter((f) => f.veces > 0).length
+
+  // promedio dinámico: cada cuánto se hace un territorio.
+  // (territorios × días desde 01/06/2026) ÷ total de pasadas completas
+  const INICIO = new Date(2026, 5, 1)
+  const dias = Math.max(1, Math.round((Date.now() - INICIO.getTime()) / 86400000))
+  const pasadas = feats.reduce((s, f) => s + (f.veces || 0), 0)
+  const promDias = pasadas > 0 ? Math.round((total * dias) / pasadas) : null
 
   const buckets = [
     { key: '0', label: 'Sin hacer', n: feats.filter((f) => f.veces === 0).length, color: metricColor(0, theme) },
@@ -99,6 +108,22 @@ export default function MetricaPanel({ data, theme, meta }) {
 
         {meta && meta.actualizado && (
           <div className="mp-updated">Datos actualizados: <b>{fmtFecha(meta.actualizado)}</b></div>
+        )}
+
+        {promDias != null && (
+          <div className="mp-avg">
+            <button className="mp-avg-row" onClick={() => setInfoOpen((o) => !o)} aria-expanded={infoOpen}>
+              <span>En promedio un territorio se hace cada: <b>{promDias} días</b></span>
+              <IconInfo className="mp-i" />
+            </button>
+            {infoOpen && (
+              <div className="mp-avg-info">
+                Estimación de cada cuánto se vuelve a predicar un territorio.
+                Se calcula: (territorios × días desde que arrancó el registro) ÷ total de veces predicadas.
+                Cuenta también los territorios que todavía no se hicieron.
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

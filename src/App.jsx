@@ -70,6 +70,51 @@ function labelPoint(geom) {
   }
   return best ? ringCentroid(best) : null
 }
+// Diagonales de la manzana usando un bounding box ORIENTADO (alineado a su lado
+// más largo), así la X queda contenida y prolija aunque el polígono esté rotado.
+// Devuelve [[p,p],[p,p]] en lng/lat, o null.
+function obbDiagonals(ring, scale = 0.86) {
+  const pts = ring.slice(0, -1)
+  if (pts.length < 3) return null
+  const lat0 = pts[0][1]
+  const kx = Math.cos((lat0 * Math.PI) / 180)          // corrige la escala de lng
+  const P = pts.map(([lng, lat]) => [lng * kx, lat])
+
+  // dirección del lado más largo
+  let ang = 0, best = -1
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], b = P[(i + 1) % P.length]
+    const d = Math.hypot(b[0] - a[0], b[1] - a[1])
+    if (d > best) { best = d; ang = Math.atan2(b[1] - a[1], b[0] - a[0]) }
+  }
+  const cos = Math.cos(-ang), sin = Math.sin(-ang)
+  const rot = (p) => [p[0] * cos - p[1] * sin, p[0] * sin + p[1] * cos]
+  const unrot = (p) => {
+    const c2 = Math.cos(ang), s2 = Math.sin(ang)
+    return [p[0] * c2 - p[1] * s2, p[0] * s2 + p[1] * c2]
+  }
+
+  // bbox en el espacio rotado
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  for (const p of P) {
+    const r = rot(p)
+    if (r[0] < minX) minX = r[0]; if (r[0] > maxX) maxX = r[0]
+    if (r[1] < minY) minY = r[1]; if (r[1] > maxY) maxY = r[1]
+  }
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2
+  const hw = ((maxX - minX) / 2) * scale, hh = ((maxY - minY) / 2) * scale
+
+  // esquinas -> volver al plano original -> a lng/lat
+  const corner = (sx, sy) => {
+    const p = unrot([cx + sx * hw, cy + sy * hh])
+    return [p[0] / kx, p[1]]
+  }
+  return [
+    [corner(-1, -1), corner(1, 1)],
+    [corner(-1, 1), corner(1, -1)],
+  ]
+}
+
 function toLabelFC(fc) {
   return {
     type: 'FeatureCollection',
@@ -114,25 +159,8 @@ export default function App() {
       const rings = g.type === 'Polygon' ? [g.coordinates[0]]
         : g.type === 'MultiPolygon' ? g.coordinates.map(p => p[0]) : []
       for (const ring of rings) {
-        const pts = ring.slice(0, -1)                  // sin repetir el cierre
-        if (pts.length < 4) continue
-        const c = ringCentroid(ring)
-        // 4 esquinas = vértices más lejanos al centro en cada cuadrante
-        const best = {}
-        for (const p of pts) {
-          const q = (p[0] >= c[0] ? 'E' : 'W') + (p[1] >= c[1] ? 'N' : 'S')
-          const d = Math.hypot(p[0] - c[0], p[1] - c[1])
-          if (!best[q] || d > best[q].d) best[q] = { p, d }
-        }
-        const NE = best.EN, NW = best.WN, SE = best.ES, SW = best.WS
-        if (!NE || !NW || !SE || !SW) continue
-        // acercar 10% al centro para no pisar el borde
-        const shrink = (p) => [c[0] + (p[0] - c[0]) * 0.9, c[1] + (p[1] - c[1]) * 0.9]
-        feats.push({ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString',
-          coordinates: [
-            [shrink(SW.p), shrink(NE.p)],
-            [shrink(NW.p), shrink(SE.p)],
-          ] } })
+        const x = obbDiagonals(ring, 0.86)
+        if (x) feats.push({ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString', coordinates: x } })
       }
     }
     return { type: 'FeatureCollection', features: feats }
@@ -234,17 +262,31 @@ export default function App() {
   // deep-link: cuando mapa Y datos están listos, si la URL trae ?t=T52 abrir ese
   // territorio (después del fitAll inicial, para que el zoom no se pise)
   useEffect(() => {
-    if (!terr || !mapLoaded || deepLinkDone.current) return
-    deepLinkDone.current = true
+    if (!terr || deepLinkDone.current) return
+    let id, tachadas
     try {
       const q = new URL(window.location.href).searchParams
-      const id = q.get('t')
-      if (id && terr.features.some(f => f.properties.territorio === id)) {
-        // ?m=1,3,4 -> tachar esas manzanas del territorio (solo al entrar por URL)
-        const tachadas = (q.get('m') || '').split(',').map(s => s.trim()).filter(Boolean)
-        selectTerr(id, { tilt: true, tachadas })
-      }
-    } catch (e) {}
+      id = q.get('t')
+      if (!id || !terr.features.some(f => f.properties.territorio === id)) return
+      // ?m=1,3,4 -> tachar esas manzanas del territorio (solo al entrar por URL)
+      tachadas = (q.get('m') || '').split(',').map(s => s.trim()).filter(Boolean)
+    } catch (e) { return }
+    // esperar a que el mapa exista y esté listo, para que el fitAll inicial no pise el zoom.
+    // La marca se pone al disparar (no antes), si no StrictMode aborta el reintento.
+    let ticks = 0
+    const iv = setInterval(() => {
+      if (deepLinkDone.current) { clearInterval(iv); return }
+      ticks++
+      const map = mapRef.current && mapRef.current.getMap()
+      if (!map) return
+      // listo, o pasó ~0.6s (suficiente para que el fitAll inicial ya corrió)
+      if (!mapLoaded && !map.isStyleLoaded() && ticks < 5) return
+      clearInterval(iv)
+      deepLinkDone.current = true
+      selectTerr(id, { tilt: true, tachadas })
+    }, 120)
+    const stop = setTimeout(() => clearInterval(iv), 15000)
+    return () => { clearInterval(iv); clearTimeout(stop) }
   }, [terr, mapLoaded, selectTerr])
 
   // compartir el territorio activo por WhatsApp con link directo
@@ -357,7 +399,7 @@ export default function App() {
       'text-ignore-placement': false,      // pero reserva su lugar -> las manzanas lo esquivan
       'text-padding': 6,
     },
-    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3.8, 'text-halo-blur': 0.4 },
+    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 4.6, 'text-halo-blur': 0.2 },
   }
 
   // --- calles limítrofes (label sobre cada lado del contorno) ---
@@ -410,8 +452,8 @@ export default function App() {
     id: 'manz-tach-x-halo', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': theme === 'dark' ? 'rgba(10,8,18,.6)' : 'rgba(255,255,255,.6)',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 3.4, 17, 7],
+      'line-color': theme === 'dark' ? 'rgba(10,8,18,.75)' : 'rgba(255,255,255,.8)',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 4, 17, 8],
     },
   }
   const tachXLine = {
@@ -483,14 +525,16 @@ export default function App() {
             <Layer {...manzFillSel} />
             <Layer {...manzLine} />
             <Layer {...manzLineSel} />
-            <Layer {...tachFill} />
-            <Layer {...tachLine} />
+            <Layer {...tachFill} beforeId="terr-label" />
+            <Layer {...tachLine} beforeId="terr-label" />
           </Source>
         )}
         {tachXFC && (
           <Source id="manz-tach-x-src" type="geojson" data={tachXFC}>
-            <Layer {...tachXHalo} />
-            <Layer {...tachXLine} />
+            {/* beforeId: la fuente se monta después que los labels, así que hay que
+                insertarla explícitamente debajo para no taparlos */}
+            <Layer {...tachXHalo} beforeId="terr-label" />
+            <Layer {...tachXLine} beforeId="terr-label" />
           </Source>
         )}
         {/* labels arriba de todo */}

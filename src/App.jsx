@@ -88,6 +88,7 @@ export default function App() {
   const [meta, setMeta] = useState(null)
   const [popup, setPopup] = useState(null)
   const [selected, setSelected] = useState(null)     // territorio id
+  const [tachadas, setTachadas] = useState(null)     // manzanas tachadas (solo por URL ?m=1,3)
   const [geoError, setGeoError] = useState(null)
   const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -100,6 +101,42 @@ export default function App() {
   const geoRef = useRef(null)
   const terrLabels = useMemo(() => (terr ? toLabelFC(terr) : null), [terr])
   const manzLabels = useMemo(() => (manz ? toLabelFC(manz) : null), [manz])
+
+  // diagonales (la "X") de las manzanas tachadas: ocupan la manzana completa
+  const tachXFC = useMemo(() => {
+    if (!manz || !selected || !tachadas || !tachadas.length) return null
+    const feats = []
+    for (const f of manz.features) {
+      const p = f.properties
+      if (p.territorio !== selected || !tachadas.includes(String(p.manzana))) continue
+      // diagonales usando los vértices reales de la manzana (respeta la rotación)
+      const g = f.geometry
+      const rings = g.type === 'Polygon' ? [g.coordinates[0]]
+        : g.type === 'MultiPolygon' ? g.coordinates.map(p => p[0]) : []
+      for (const ring of rings) {
+        const pts = ring.slice(0, -1)                  // sin repetir el cierre
+        if (pts.length < 4) continue
+        const c = ringCentroid(ring)
+        // 4 esquinas = vértices más lejanos al centro en cada cuadrante
+        const best = {}
+        for (const p of pts) {
+          const q = (p[0] >= c[0] ? 'E' : 'W') + (p[1] >= c[1] ? 'N' : 'S')
+          const d = Math.hypot(p[0] - c[0], p[1] - c[1])
+          if (!best[q] || d > best[q].d) best[q] = { p, d }
+        }
+        const NE = best.EN, NW = best.WN, SE = best.ES, SW = best.WS
+        if (!NE || !NW || !SE || !SW) continue
+        // acercar 10% al centro para no pisar el borde
+        const shrink = (p) => [c[0] + (p[0] - c[0]) * 0.9, c[1] + (p[1] - c[1]) * 0.9]
+        feats.push({ type: 'Feature', properties: {}, geometry: { type: 'MultiLineString',
+          coordinates: [
+            [shrink(SW.p), shrink(NE.p)],
+            [shrink(NW.p), shrink(SE.p)],
+          ] } })
+      }
+    }
+    return { type: 'FeatureCollection', features: feats }
+  }, [manz, selected, tachadas])
   const ready = useRef({ data: false, map: false, time: false, done: false })
   const deepLinkDone = useRef(false)
 
@@ -158,10 +195,13 @@ export default function App() {
   useEffect(() => { fitAll() }, [terr, fitAll])
 
   // refleja el territorio activo en la URL (?t=T52) sin recargar -> permite compartir
-  const setUrlTerr = (id) => {
+  const setUrlTerr = (id, manzanas) => {
     try {
       const u = new URL(window.location.href)
       if (id) u.searchParams.set('t', id); else u.searchParams.delete('t')
+      // ?m solo sobrevive si sigue vigente el tachado que vino por URL
+      if (manzanas && manzanas.length) u.searchParams.set('m', manzanas.join(','))
+      else u.searchParams.delete('m')
       window.history.replaceState(null, '', u)
     } catch (e) {}
   }
@@ -172,13 +212,18 @@ export default function App() {
     if (!feat) return
     setSelected(id)
     setPopup({ ...feat.properties })
-    setUrlTerr(id)
+    // el tachado de manzanas viene solo por URL; cualquier selección manual lo limpia
+    const tach = opts.tachadas && opts.tachadas.length ? opts.tachadas : null
+    setTachadas(tach)
+    setUrlTerr(id, tach)
     const cam = { padding: { top: 140, bottom: 70, left: 40, right: 40 }, maxZoom: 16.5, duration: 650 }
     if (opts.tilt) { cam.pitch = 38; cam.bearing = -16; cam.duration = 950 }  // vista 3D leve (deep-link)
     if (mapRef.current) mapRef.current.fitBounds(bboxOf(feat.geometry), cam)
   }, [terr])
 
-  const clearTerr = useCallback(() => { setSelected(null); setPopup(null); setUrlTerr(null) }, [])
+  const clearTerr = useCallback(() => {
+    setSelected(null); setPopup(null); setTachadas(null); setUrlTerr(null)
+  }, [])
 
   const onClick = useCallback((e) => {
     const f = e.features && e.features[0]
@@ -192,8 +237,13 @@ export default function App() {
     if (!terr || !mapLoaded || deepLinkDone.current) return
     deepLinkDone.current = true
     try {
-      const id = new URL(window.location.href).searchParams.get('t')
-      if (id && terr.features.some(f => f.properties.territorio === id)) selectTerr(id, { tilt: true })
+      const q = new URL(window.location.href).searchParams
+      const id = q.get('t')
+      if (id && terr.features.some(f => f.properties.territorio === id)) {
+        // ?m=1,3,4 -> tachar esas manzanas del territorio (solo al entrar por URL)
+        const tachadas = (q.get('m') || '').split(',').map(s => s.trim()).filter(Boolean)
+        selectTerr(id, { tilt: true, tachadas })
+      }
     } catch (e) {}
   }, [terr, mapLoaded, selectTerr])
 
@@ -342,6 +392,37 @@ export default function App() {
     id: 'manz-line-sel', type: 'line', filter: ['==', ['get', 'territorio'], sel],
     paint: { 'line-color': theme === 'dark' ? '#c9b6f0' : '#4e3b8f', 'line-width': 1.4, 'line-opacity': 1 },
   }
+  // --- manzanas TACHADAS (solo al entrar por URL con ?m=...) ---
+  // filtro que nunca matchea si no hay tachado vigente
+  const tachFilter = (tachadas && tachadas.length && selected)
+    ? ['all', ['==', ['get', 'territorio'], sel], ['in', ['get', 'manzana'], ['literal', tachadas]]]
+    : ['==', ['get', 'territorio'], '__none__']
+  const tachFill = {
+    id: 'manz-tach-fill', type: 'fill', filter: tachFilter,
+    paint: { 'fill-color': '#d32f2f', 'fill-opacity': 0.34 },
+  }
+  const tachLine = {
+    id: 'manz-tach-line', type: 'line', filter: tachFilter,
+    paint: { 'line-color': '#b71c1c', 'line-width': 1.6, 'line-opacity': 0.9 },
+  }
+  // la X ocupa la manzana entera (diagonales dibujadas como líneas)
+  const tachXHalo = {
+    id: 'manz-tach-x-halo', type: 'line',
+    layout: { 'line-cap': 'round' },
+    paint: {
+      'line-color': theme === 'dark' ? 'rgba(10,8,18,.6)' : 'rgba(255,255,255,.6)',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 3.4, 17, 7],
+    },
+  }
+  const tachXLine = {
+    id: 'manz-tach-x', type: 'line',
+    layout: { 'line-cap': 'round' },
+    paint: {
+      'line-color': '#e02020',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 2.2, 17, 5],
+    },
+  }
+
   const manzLabel = {
     id: 'manz-label', type: 'symbol', minzoom: 15,
     // con un territorio seleccionado, ocultar los números de manzana del resto (solo se ve el seleccionado)
@@ -402,6 +483,14 @@ export default function App() {
             <Layer {...manzFillSel} />
             <Layer {...manzLine} />
             <Layer {...manzLineSel} />
+            <Layer {...tachFill} />
+            <Layer {...tachLine} />
+          </Source>
+        )}
+        {tachXFC && (
+          <Source id="manz-tach-x-src" type="geojson" data={tachXFC}>
+            <Layer {...tachXHalo} />
+            <Layer {...tachXLine} />
           </Source>
         )}
         {/* labels arriba de todo */}

@@ -6,7 +6,6 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { STYLES, COLORS, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
 import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
-import Guide from './Guide.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
 import { IconMap, IconChart, IconSun, IconMoon, IconLogo, IconWhatsapp } from './icons.jsx'
@@ -140,8 +139,6 @@ export default function App() {
   const [bordeCalles, setBordeCalles] = useState(null)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
-  const [showGuide, setShowGuide] = useState(() => { try { return !localStorage.getItem('guideSeen') } catch (e) { return true } })
-  const [dontShow, setDontShow] = useState(false)
   const mapRef = useRef(null)
   const geoRef = useRef(null)
   const terrLabels = useMemo(() => (terr ? toLabelFC(terr) : null), [terr])
@@ -322,11 +319,6 @@ export default function App() {
     map.once('idle', compute)
     return () => { cancelled = true; map.off('idle', compute) }
   }, [selected, terr, mapLoaded, online])
-
-  const closeGuide = useCallback(() => {
-    if (dontShow) { try { localStorage.setItem('guideSeen', '1') } catch (e) {} }
-    setShowGuide(false)
-  }, [dontShow])
 
   const onGeoError = useCallback((e) => {
     const msg = e && e.code === 1 ? 'Permiso de ubicación denegado. En Mac: Ajustes ▸ Privacidad ▸ Localización → activá el navegador.'
@@ -595,10 +587,6 @@ export default function App() {
           <IconChart /><span>Métrica</span>
         </button>
       </nav>
-
-      {!splash && showGuide && (
-        <Guide dontShow={dontShow} setDontShow={setDontShow} onClose={closeGuide} />
-      )}
 
       {splash && <Splash out={splashOut} />}
     </div>

@@ -32,30 +32,6 @@ export const IconMoon = (p) => (
   </svg>
 )
 
-export const IconTap = (p) => (
-  <svg {...base} {...p}>
-    <path d="M9 11V6a2 2 0 0 1 4 0v5" />
-    <path d="M13 11V9a2 2 0 0 1 4 0v3" />
-    <path d="M17 12a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-2a6 6 0 0 1-5.2-3l-2.3-4a2 2 0 0 1 3.4-2L9 12" />
-  </svg>
-)
-
-export const IconZoom = (p) => (
-  <svg {...base} {...p}>
-    <circle cx="11" cy="11" r="7" />
-    <line x1="16" y1="16" x2="21" y2="21" />
-    <line x1="11" y1="8" x2="11" y2="14" />
-    <line x1="8" y1="11" x2="14" y2="11" />
-  </svg>
-)
-
-export const IconPin = (p) => (
-  <svg {...base} {...p}>
-    <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z" />
-    <circle cx="12" cy="10" r="2.5" />
-  </svg>
-)
-
 export const IconInfo = (p) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="9" />

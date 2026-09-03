@@ -8,7 +8,7 @@ import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
-import { IconMap, IconChart, IconSun, IconMoon, IconLogo, IconWhatsapp } from './icons.jsx'
+import { IconMap, IconChart, IconPath, IconSun, IconMoon, IconLogo, IconWhatsapp } from './icons.jsx'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
@@ -114,6 +114,43 @@ function obbDiagonals(ring, scale = 0.86) {
   ]
 }
 
+// bbox (para el zoom) + centro real (para la cámara) del cluster principal.
+// Dos problemas con solo hacer fitBounds de todo: (1) hay un grupo aislado
+// (Villa Josefina, ~7 de 64) lejos del grueso (Frontera/SF) que si se incluye
+// arranca la cámara centrada en el hueco vacío entre ambos; (2) incluso solo
+// el cluster principal es una tira angosta pegada al borde oeste con algún
+// territorio suelto que estira el borde este, así que el CENTRO del bbox
+// tampoco coincide con donde está realmente la mayoría -> se usa el promedio
+// de centroides en vez del centro geométrico del bbox.
+function mainClusterFocus(features) {
+  const cents = features.map(f => {
+    const b = bboxOf(f.geometry)
+    return { f, cx: (b[0][0] + b[1][0]) / 2, cy: (b[0][1] + b[1][1]) / 2 }
+  })
+  const xs = cents.map(c => c.cx).slice().sort((a, b) => a - b)
+  let gapIdx = -1, gapSize = 0
+  for (let i = 0; i < xs.length - 1; i++) {
+    const g = xs[i + 1] - xs[i]
+    if (g > gapSize) { gapSize = g; gapIdx = i }
+  }
+  let main = cents
+  if (gapIdx >= 0 && gapSize >= 0.01) {
+    const cut = (xs[gapIdx] + xs[gapIdx + 1]) / 2
+    const left = cents.filter(c => c.cx <= cut)
+    const right = cents.filter(c => c.cx > cut)
+    const bigger = left.length >= right.length ? left : right
+    if (bigger.length >= cents.length * 0.5) main = bigger   // sino, ningún lado es mayoría clara -> usar todos
+  }
+  let minX = 180, minY = 90, maxX = -180, maxY = -90, sx = 0, sy = 0
+  for (const c of main) {
+    const b = bboxOf(c.f.geometry)
+    if (b[0][0] < minX) minX = b[0][0]; if (b[1][0] > maxX) maxX = b[1][0]
+    if (b[0][1] < minY) minY = b[0][1]; if (b[1][1] > maxY) maxY = b[1][1]
+    sx += c.cx; sy += c.cy
+  }
+  return { bounds: [[minX, minY], [maxX, maxY]], center: [sx / main.length, sy / main.length] }
+}
+
 function toLabelFC(fc) {
   return {
     type: 'FeatureCollection',
@@ -126,7 +163,9 @@ function toLabelFC(fc) {
 
 export default function App() {
   const [theme, setTheme] = useState(getInitialTheme)
-  const [mode, setMode] = useState('mapa') // 'mapa' | 'metrica'
+  // 'campana' es el default de este mes (MODO CAMPAÑA temporal); para volver a
+  // abrir siempre en Mapa alcanza con cambiar este valor a 'mapa'.
+  const [mode, setMode] = useState('campana') // 'mapa' | 'metrica' | 'campana'
   const [terr, setTerr] = useState(null)
   const [manz, setManz] = useState(null)
   const [meta, setMeta] = useState(null)
@@ -207,13 +246,9 @@ export default function App() {
 
   const fitAll = useCallback(() => {
     if (!terr || !mapRef.current) return
-    let minX = 180, minY = 90, maxX = -180, maxY = -90
-    for (const f of terr.features) {
-      const b = bboxOf(f.geometry)
-      if (b[0][0] < minX) minX = b[0][0]; if (b[1][0] > maxX) maxX = b[1][0]
-      if (b[0][1] < minY) minY = b[0][1]; if (b[1][1] > maxY) maxY = b[1][1]
-    }
-    mapRef.current.fitBounds([[minX, minY], [maxX, maxY]], { padding: 24, duration: 0 })
+    const { bounds, center } = mainClusterFocus(terr.features)
+    mapRef.current.fitBounds(bounds, { padding: 24, duration: 0 })
+    mapRef.current.jumpTo({ center })   // el bbox no queda parejo -> recentrar en el promedio real
     mapRef.current.zoomTo(mapRef.current.getZoom() + 0.35, { duration: 0 })
   }, [terr])
 
@@ -260,11 +295,12 @@ export default function App() {
   // territorio (después del fitAll inicial, para que el zoom no se pise)
   useEffect(() => {
     if (!terr || deepLinkDone.current) return
-    let id, tachadas
+    let id, tachadas, feat
     try {
       const q = new URL(window.location.href).searchParams
       id = q.get('t')
-      if (!id || !terr.features.some(f => f.properties.territorio === id)) return
+      feat = terr.features.find(f => f.properties.territorio === id)
+      if (!id || !feat) return
       // ?m=1,3,4 -> tachar esas manzanas del territorio (solo al entrar por URL)
       tachadas = (q.get('m') || '').split(',').map(s => s.trim()).filter(Boolean)
     } catch (e) { return }
@@ -276,10 +312,13 @@ export default function App() {
       ticks++
       const map = mapRef.current && mapRef.current.getMap()
       if (!map) return
-      // listo, o pasó ~0.6s (suficiente para que el fitAll inicial ya corrió)
-      if (!mapLoaded && !map.isStyleLoaded() && ticks < 5) return
+      // esperar a que cargue de verdad (~3s de margen para redes lentas); si no,
+      // algún pane raro nunca resuelve isStyleLoaded() y hay que igual disparar
+      if (!mapLoaded && !map.isStyleLoaded() && ticks < 25) return
       clearInterval(iv)
       deepLinkDone.current = true
+      // en Campaña solo se dibujan los marcados: un link a uno no marcado se abre en Mapa
+      if (!feat.properties.campania) setMode(m => (m === 'campana' ? 'mapa' : m))
       selectTerr(id, { tilt: true, tachadas })
     }, 120)
     const stop = setTimeout(() => clearInterval(iv), 15000)
@@ -337,23 +376,29 @@ export default function App() {
     )
   }
 
-  const c = COLORS[theme]
   const isMet = mode === 'metrica'
+  const isCamp = mode === 'campana'
+  const c = isCamp ? COLORS.campana : COLORS[theme]
   const sel = selected || '__none__'
-  const manzBorder = theme === 'dark' ? 'rgba(182,163,230,.5)' : 'rgba(78,59,143,.4)'
-  const highlight = theme === 'dark' ? '#d9c8ff' : '#4e3b8f'
-  const lblTxt = theme === 'dark' ? '#ffffff' : '#0f1520'
-  const lblHalo = theme === 'dark' ? 'rgba(10,8,18,.95)' : 'rgba(255,255,255,.95)'
-  const terrLblColor = theme === 'dark' ? '#b6a3e6' : '#6a4fb0'  // nro de territorio en color del trazo
+  // MODO CAMPAÑA: paleta fija dorado/blanco, no depende de dark/light
+  const manzBorder = isCamp ? 'rgba(138,106,18,.45)' : (theme === 'dark' ? 'rgba(182,163,230,.5)' : 'rgba(78,59,143,.4)')
+  const highlight = isCamp ? '#8a6a12' : (theme === 'dark' ? '#d9c8ff' : '#4e3b8f')
+  const lblTxt = isCamp ? '#4a3a08' : (theme === 'dark' ? '#ffffff' : '#0f1520')
+  const lblHalo = isCamp ? 'rgba(255,255,255,.95)' : (theme === 'dark' ? 'rgba(10,8,18,.95)' : 'rgba(255,255,255,.95)')
+  const terrLblColor = isCamp ? '#8a6a12' : (theme === 'dark' ? '#b6a3e6' : '#6a4fb0')  // nro de territorio en color del trazo
 
   // --- capa TERRITORIO (unión) ---
+  // MODO CAMPAÑA: solo se dibujan los territorios marcados (property campania)
+  const campFilter = ['==', ['get', 'campania'], true]
   const terrFill = {
     id: 'terr-fill', type: 'fill',
+    ...(isCamp ? { filter: campFilter } : {}),
     paint: { 'fill-color': isMet ? metricFillExpr(theme) : c.fill, 'fill-opacity': isMet ? 0.7 : c.fillOpacity },
   }
   const glowBase = (!isMet && c.neon) ? 0.6 : 0
   const terrGlow = {
     id: 'terr-glow', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
+    ...(isCamp ? { filter: campFilter } : {}),
     paint: {
       'line-color': c.glow,
       'line-width': (!isMet && c.neon) ? c.glowWidth : 0,
@@ -364,6 +409,7 @@ export default function App() {
   }
   const terrLine = {
     id: 'terr-line', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
+    ...(isCamp ? { filter: campFilter } : {}),
     paint: {
       'line-color': isMet ? (theme === 'dark' ? 'rgba(255,255,255,.4)' : 'rgba(20,30,60,.5)') : c.stroke,
       'line-width': isMet ? 1.2 : c.coreWidth,
@@ -379,12 +425,14 @@ export default function App() {
   // lejos (overview): declutter para no amontonar los 64
   const terrLabelFar = {
     id: 'terr-label', type: 'symbol', maxzoom: 15,
+    ...(isCamp ? { filter: campFilter } : {}),
     layout: { 'text-field': ['get', 'territorio'], 'text-font': ['Noto Sans Bold'], 'text-size': 15 },
     paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 2.4 },
   }
   // cerca (zoom manzanas): SIEMPRE visible + no bloquea los nros de manzana
   const terrLabelNear = {
     id: 'terr-label-near', type: 'symbol', minzoom: 15,
+    ...(isCamp ? { filter: campFilter } : {}),
     layout: {
       'text-field': ['get', 'territorio'], 'text-font': ['Noto Sans Bold'], 'text-size': 18,
       'text-allow-overlap': true,          // el nro de territorio siempre se ve
@@ -411,10 +459,12 @@ export default function App() {
   // --- capa MANZANAS ---
   const manzFillSel = {
     id: 'manz-fill-sel', type: 'fill', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'fill-color': theme === 'dark' ? '#8a6fd0' : '#6a4fb0', 'fill-opacity': 0.16 },
+    paint: { 'fill-color': isCamp ? '#d4af37' : (theme === 'dark' ? '#8a6fd0' : '#6a4fb0'), 'fill-opacity': 0.16 },
   }
   const manzLine = {
     id: 'manz-line', type: 'line',
+    // en Campaña, las manzanas de territorios no marcados tampoco se dibujan
+    ...(isCamp ? { filter: campFilter } : {}),
     paint: {
       'line-color': manzBorder,
       'line-width': 0.8,
@@ -424,7 +474,7 @@ export default function App() {
   }
   const manzLineSel = {
     id: 'manz-line-sel', type: 'line', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'line-color': theme === 'dark' ? '#c9b6f0' : '#4e3b8f', 'line-width': 1.4, 'line-opacity': 1 },
+    paint: { 'line-color': isCamp ? '#8a6a12' : (theme === 'dark' ? '#c9b6f0' : '#4e3b8f'), 'line-width': 1.4, 'line-opacity': 1 },
   }
   // --- manzanas TACHADAS (solo al entrar por URL con ?m=...) ---
   // filtro que nunca matchea si no hay tachado vigente
@@ -459,8 +509,10 @@ export default function App() {
 
   const manzLabel = {
     id: 'manz-label', type: 'symbol', minzoom: 15,
-    // con un territorio seleccionado, ocultar los números de manzana del resto (solo se ve el seleccionado)
-    filter: selected ? ['==', ['get', 'territorio'], ' __none__'] : ['has', 'territorio'],
+    // con un territorio seleccionado, ocultar los números de manzana del resto (solo se ve el seleccionado);
+    // en Campaña, sin selección, solo se numeran las manzanas de territorios marcados
+    filter: selected ? ['==', ['get', 'territorio'], ' __none__']
+      : (isCamp ? ['all', ['has', 'territorio'], campFilter] : ['has', 'territorio']),
     layout: {
       'text-field': ['get', 'manzana'], 'text-font': ['Noto Sans Bold'], 'text-size': 15,
       'text-allow-overlap': false,
@@ -485,11 +537,19 @@ export default function App() {
     <div className="app" data-theme={theme}>
       <Map
         ref={mapRef}
-        mapStyle={online ? STYLES[theme] : offlineStyle()}
+        mapStyle={online ? STYLES[isCamp ? 'light' : theme] : offlineStyle()}
         initialViewState={{ longitude: -62.03, latitude: -31.43, zoom: 12, pitch: 0, bearing: 0 }}
         interactiveLayerIds={['terr-fill']}
         onClick={onClick}
-        onLoad={() => { if (mapRef.current) { mapRef.current.resize(); if (import.meta.env.DEV) window.__map = mapRef.current.getMap() } fitAll(); ready.current.map = true; setMapLoaded(true); hideSplash() }}
+        onLoad={() => {
+          if (mapRef.current) { mapRef.current.resize(); if (import.meta.env.DEV) window.__map = mapRef.current.getMap() }
+          // si la URL trae ?t=... el encuadre lo hace el deep-link: si este fitAll
+          // corre después (mapa lento), le pisaba la cámara ya posicionada
+          let hasDeepLink = false
+          try { hasDeepLink = !!new URL(window.location.href).searchParams.get('t') } catch (e) {}
+          if (!hasDeepLink) fitAll()
+          ready.current.map = true; setMapLoaded(true); hideSplash()
+        }}
         minZoom={12}
         maxZoom={20}
         maxPitch={40}
@@ -554,10 +614,13 @@ export default function App() {
         <IconLogo className="logo" />
         <h1>Congregación Este, SF</h1>
       </div>
-      <button className="themeBtn" aria-label="Cambiar tema"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-        {theme === 'dark' ? <IconSun /> : <IconMoon />}
-      </button>
+      {/* paleta de Campaña es fija (dorado/blanco): el toggle no aplica en esa vista */}
+      {!isCamp && (
+        <button className="themeBtn" aria-label="Cambiar tema"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? <IconSun /> : <IconMoon />}
+        </button>
+      )}
 
       {geoError && <div className="toast">{geoError}</div>}
 
@@ -575,11 +638,20 @@ export default function App() {
         </div>
       )}
 
-      {!isMet && <Buscador data={terr} onPick={selectTerr} />}
+      {/* en Campaña el buscador solo encuentra los territorios marcados (los únicos visibles) */}
+      {!isMet && (
+        <Buscador
+          data={isCamp && terr ? { ...terr, features: terr.features.filter(f => f.properties.campania) } : terr}
+          onPick={selectTerr}
+        />
+      )}
 
       {isMet && <MetricaPanel data={terr} theme={theme} meta={meta} />}
 
       <nav className="footer">
+        <button className={isCamp ? 'on on-gold' : ''} onClick={() => setMode('campana')}>
+          <IconPath /><span>Campaña</span>
+        </button>
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
           <IconMap /><span>Mapa</span>
         </button>

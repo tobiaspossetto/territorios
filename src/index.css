@@ -65,6 +65,12 @@ body {
 .footer button .ico { font-size: 18px; line-height: 1; }
 .footer button.on { color: #fff; background: linear-gradient(135deg, #6a4fb0, #8a6fd0); }
 .app[data-theme="dark"] .footer button.on { background: linear-gradient(135deg, #5a3fa0, #8f7ec9); }
+/* MODO CAMPAÑA (temporal): botón activo en dorado, sin importar dark/light
+   (mismo peso que la regla [data-theme="dark"] .on de arriba, para ganarle) */
+.footer button.on-gold,
+.app[data-theme="dark"] .footer button.on-gold {
+  color: #3b2c08; background: linear-gradient(135deg, #e6c34d, #b8860b);
+}
 
 /* tarjeta de info del territorio (fija arriba, no tapa el territorio) */
 .info-card {

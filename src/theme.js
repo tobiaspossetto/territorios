@@ -12,6 +12,9 @@ export const COLORS = {
            coreWidth: 2.6, glowWidth: 10, glowBlur: 12, label: '#efe9f8', labelHalo: '#12101a' },
   light: { fill: '#6a4fb0', fillOpacity: 0.16, stroke: '#4e3b8f', glow: '#4e3b8f', neon: false,
            coreWidth: 1.8, glowWidth: 0, glowBlur: 0, label: '#2a2733', labelHalo: '#ffffff' },
+  // paleta MODO CAMPAÑA (temporal, del mes) — dorado sobre blanco, sin variante dark/light
+  campana: { fill: '#d4af37', fillOpacity: 0.22, stroke: '#8a6a12', glow: '#d4af37', neon: false,
+             coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#4a3a08', labelHalo: '#ffffff' },
 }
 
 // Estilo OFFLINE: base dark desde el extracto local zona.pmtiles + glyphs locales.

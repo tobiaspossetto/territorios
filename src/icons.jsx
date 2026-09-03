@@ -19,6 +19,14 @@ export const IconChart = (p) => (
   </svg>
 )
 
+// sendero + destino: mismo motivo del "camino hacia la meta" para Campaña
+export const IconPath = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3.5 19c2.5-.5 3-2.5 5-3.5s2.5 1.5 4.5.8 1.8-3.3 3.8-4.3" />
+    <circle cx="18.5" cy="6.5" r="2" />
+  </svg>
+)
+
 export const IconSun = (p) => (
   <svg {...base} {...p}>
     <circle cx="12" cy="12" r="4" />

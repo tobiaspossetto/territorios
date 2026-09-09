@@ -379,21 +379,38 @@ export default function App() {
   const isMet = mode === 'metrica'
   const isCamp = mode === 'campana'
   const c = isCamp ? COLORS.campana : COLORS[theme]
+  // MODO CAMPAÑA: "hecho" (ya se completó esta semana) se pinta verde en vez de
+  // dorado, para distinguirlo de lo recién asignado ("activo"). El territorio
+  // SELECCIONADO es un solo feature -> alcanza con mirar su estado en JS; los
+  // territorios sin seleccionar se pintan todos juntos -> esos necesitan una
+  // expresión de MapLibre que lea la propiedad por feature.
+  const ch = COLORS.campanaHecho
+  const selFeat = isCamp && selected && terr ? terr.features.find(f => f.properties.territorio === selected) : null
+  const selHecho = !!(selFeat && selFeat.properties.campania_hecho)
   const sel = selected || '__none__'
-  // MODO CAMPAÑA: paleta fija dorado/blanco, no depende de dark/light
+  // MODO CAMPAÑA: paleta fija dorado/blanco (o verde si "hecho"), no depende de dark/light
   const manzBorder = isCamp ? 'rgba(138,106,18,.45)' : (theme === 'dark' ? 'rgba(182,163,230,.5)' : 'rgba(78,59,143,.4)')
-  const highlight = isCamp ? '#8a6a12' : (theme === 'dark' ? '#d9c8ff' : '#4e3b8f')
-  const lblTxt = isCamp ? '#4a3a08' : (theme === 'dark' ? '#ffffff' : '#0f1520')
+  const highlight = isCamp ? (selHecho ? ch.stroke : c.stroke) : (theme === 'dark' ? '#d9c8ff' : '#4e3b8f')
+  const lblTxt = isCamp ? (selHecho ? ch.label : c.label) : (theme === 'dark' ? '#ffffff' : '#0f1520')
   const lblHalo = isCamp ? 'rgba(255,255,255,.95)' : (theme === 'dark' ? 'rgba(10,8,18,.95)' : 'rgba(255,255,255,.95)')
-  const terrLblColor = isCamp ? '#8a6a12' : (theme === 'dark' ? '#b6a3e6' : '#6a4fb0')  // nro de territorio en color del trazo
+  // nro de territorio: un solo tono (calle-borde-label, solo el seleccionado) y
+  // una expresión por feature (terr-label/-near, se ven todos los marcados juntos)
+  const terrLblColorPlain = isCamp ? (selHecho ? ch.label : c.label) : (theme === 'dark' ? '#b6a3e6' : '#6a4fb0')
+  const terrLblColorExpr = isCamp
+    ? ['case', ['==', ['get', 'campania_hecho'], true], ch.label, c.label]
+    : terrLblColorPlain
 
   // --- capa TERRITORIO (unión) ---
   // MODO CAMPAÑA: solo se dibujan los territorios marcados (property campania)
   const campFilter = ['==', ['get', 'campania'], true]
+  // dorado (activo) o verde (hecho) por feature -> se ven varios territorios
+  // marcados a la vez, cada uno con su propio estado
+  const campFillExpr = ['case', ['==', ['get', 'campania_hecho'], true], ch.fill, c.fill]
+  const campStrokeExpr = ['case', ['==', ['get', 'campania_hecho'], true], ch.stroke, c.stroke]
   const terrFill = {
     id: 'terr-fill', type: 'fill',
     ...(isCamp ? { filter: campFilter } : {}),
-    paint: { 'fill-color': isMet ? metricFillExpr(theme) : c.fill, 'fill-opacity': isMet ? 0.7 : c.fillOpacity },
+    paint: { 'fill-color': isMet ? metricFillExpr(theme) : (isCamp ? campFillExpr : c.fill), 'fill-opacity': isMet ? 0.7 : c.fillOpacity },
   }
   const glowBase = (!isMet && c.neon) ? 0.6 : 0
   const terrGlow = {
@@ -411,7 +428,7 @@ export default function App() {
     id: 'terr-line', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
     ...(isCamp ? { filter: campFilter } : {}),
     paint: {
-      'line-color': isMet ? (theme === 'dark' ? 'rgba(255,255,255,.4)' : 'rgba(20,30,60,.5)') : c.stroke,
+      'line-color': isMet ? (theme === 'dark' ? 'rgba(255,255,255,.4)' : 'rgba(20,30,60,.5)') : (isCamp ? campStrokeExpr : c.stroke),
       'line-width': isMet ? 1.2 : c.coreWidth,
       // al seleccionar: atenuar el resto para que destaque el elegido
       'line-opacity': selected ? ['case', ['==', ['get', 'territorio'], selected], 1, 0.15] : 1,
@@ -427,7 +444,7 @@ export default function App() {
     id: 'terr-label', type: 'symbol', maxzoom: 15,
     ...(isCamp ? { filter: campFilter } : {}),
     layout: { 'text-field': ['get', 'territorio'], 'text-font': ['Noto Sans Bold'], 'text-size': 15 },
-    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 2.4 },
+    paint: { 'text-color': terrLblColorExpr, 'text-halo-color': lblHalo, 'text-halo-width': 2.4 },
   }
   // cerca (zoom manzanas): SIEMPRE visible + no bloquea los nros de manzana
   const terrLabelNear = {
@@ -439,10 +456,10 @@ export default function App() {
       'text-ignore-placement': false,      // pero reserva su lugar -> las manzanas lo esquivan
       'text-padding': 6,
     },
-    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 4.6, 'text-halo-blur': 0.2 },
+    paint: { 'text-color': terrLblColorExpr, 'text-halo-color': lblHalo, 'text-halo-width': 4.6, 'text-halo-blur': 0.2 },
   }
 
-  // --- calles limítrofes (label sobre cada lado del contorno) ---
+  // --- calles limítrofes (label sobre cada lado del contorno; solo el seleccionado) ---
   const calleLabel = {
     id: 'calle-borde-label', type: 'symbol',
     layout: {
@@ -453,13 +470,13 @@ export default function App() {
       'text-allow-overlap': true, 'text-ignore-placement': true,
       'text-letter-spacing': 0.02,
     },
-    paint: { 'text-color': terrLblColor, 'text-halo-color': lblHalo, 'text-halo-width': 3 },
+    paint: { 'text-color': terrLblColorPlain, 'text-halo-color': lblHalo, 'text-halo-width': 3 },
   }
 
   // --- capa MANZANAS ---
   const manzFillSel = {
     id: 'manz-fill-sel', type: 'fill', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'fill-color': isCamp ? '#d4af37' : (theme === 'dark' ? '#8a6fd0' : '#6a4fb0'), 'fill-opacity': 0.16 },
+    paint: { 'fill-color': isCamp ? (selHecho ? ch.fill : c.fill) : (theme === 'dark' ? '#8a6fd0' : '#6a4fb0'), 'fill-opacity': 0.16 },
   }
   const manzLine = {
     id: 'manz-line', type: 'line',
@@ -474,7 +491,7 @@ export default function App() {
   }
   const manzLineSel = {
     id: 'manz-line-sel', type: 'line', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'line-color': isCamp ? '#8a6a12' : (theme === 'dark' ? '#c9b6f0' : '#4e3b8f'), 'line-width': 1.4, 'line-opacity': 1 },
+    paint: { 'line-color': isCamp ? (selHecho ? ch.stroke : c.stroke) : (theme === 'dark' ? '#c9b6f0' : '#4e3b8f'), 'line-width': 1.4, 'line-opacity': 1 },
   }
   // --- manzanas TACHADAS (solo al entrar por URL con ?m=...) ---
   // filtro que nunca matchea si no hay tachado vigente
@@ -620,6 +637,12 @@ export default function App() {
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
           {theme === 'dark' ? <IconSun /> : <IconMoon />}
         </button>
+      )}
+      {isCamp && (
+        <div className="camp-legend">
+          <span><i className="dot-activo" />Activo</span>
+          <span><i className="dot-hecho" />Hecho</span>
+        </div>
       )}
 
       {geoError && <div className="toast">{geoError}</div>}

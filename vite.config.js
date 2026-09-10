@@ -26,8 +26,13 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // precachea shell + datos (geojson) + base offline (pmtiles) + glyphs (pbf)
-        globPatterns: ['**/*.{js,css,html,png,svg,geojson,webmanifest,pmtiles,pbf}'],
+        // precachea shell + base offline (pmtiles) + glyphs (pbf). Los .geojson
+        // (territorios/manzanas) NO van acá: cambian con cada "actualiza y
+        // deploy" y precacheados quedaban pegados a la versión del SW activo
+        // hasta que este se actualizara -> con un link a un territorio nuevo
+        // el celu podía mostrar datos viejos hasta recargar. Van con
+        // NetworkFirst más abajo en vez de precache.
+        globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,pmtiles,pbf}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         skipWaiting: true,      // activa el SW nuevo al toque
         clientsClaim: true,     // toma control de la pestaña sin esperar
@@ -41,6 +46,18 @@ export default defineConfig({
             options: {
               cacheName: 'maptiler-tiles-v1',
               expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 45 },  // 45 días
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // datos de territorios: con conexión, siempre la última versión
+            // (red primero); sin conexión, la última copia guardada
+            urlPattern: /\/(territorios\.geojson|manzanas\.geojson|meta\.json)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'territorios-data-v1',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

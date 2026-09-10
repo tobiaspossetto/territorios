@@ -317,8 +317,9 @@ export default function App() {
       if (!mapLoaded && !map.isStyleLoaded() && ticks < 25) return
       clearInterval(iv)
       deepLinkDone.current = true
-      // en Campaña solo se dibujan los marcados: un link a uno no marcado se abre en Mapa
-      if (!feat.properties.campania) setMode(m => (m === 'campana' ? 'mapa' : m))
+      // Campaña es la vista default: todo link abre ahí, marcado o no. Si el
+      // territorio no está marcado no se ve el polígono relleno (en Campaña
+      // solo se dibujan los marcados), pero el popup con la info sigue andando.
       selectTerr(id, { tilt: true, tachadas })
     }, 120)
     const stop = setTimeout(() => clearInterval(iv), 15000)

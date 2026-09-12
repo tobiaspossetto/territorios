@@ -6,15 +6,11 @@ body {
   overflow: hidden;
 }
 
-/* tokens por tema (en el contenedor .app) */
+/* tokens de la app (paleta única, dorado — sin modo oscuro) */
 .app {
   position: fixed; inset: 0;
-  --panel: rgba(22,20,30,.9); --stroke: rgba(255,255,255,.12);
-  --txt: #ece9f4; --muted: #9a93ad; --accent: #a08ad8; --track: rgba(255,255,255,.1);
-}
-.app[data-theme="light"] {
-  --panel: rgba(250,249,252,.95); --stroke: rgba(40,30,70,.14);
-  --txt: #2a2733; --muted: #6b6580; --accent: #6a4fb0; --track: rgba(40,30,70,.1);
+  --panel: rgba(250,249,252,.95); --stroke: rgba(60,45,10,.16);
+  --txt: #2a2733; --muted: #6b6580; --accent: #8a6a12; --track: rgba(60,45,10,.1);
 }
 
 /* footer nav para ver más elementos del sistema no se pisa */
@@ -32,17 +28,9 @@ body {
 .topbar h1 { font-size: 15px; margin: 0; color: var(--txt); font-weight: 700; letter-spacing: .2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* botón de tema arriba-der; los controles del mapa se empujan abajo de él */
-.themeBtn {
-  position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 12px; z-index: 12;
-  width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--stroke);
-  background: var(--panel); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  color: var(--txt); font-size: 18px; cursor: pointer; line-height: 1;
-}
 .maplibregl-ctrl-top-right { margin-top: calc(env(safe-area-inset-top) + 62px); }
 
-/* leyenda de Modo Campaña (dorado=activo/rojo=hecho); ocupa el lugar del
-   themeBtn, que en esta vista se oculta (paleta fija) */
+/* leyenda de Modo Campaña (dorado=activo/verde=hecho), arriba-der */
 .camp-legend {
   position: fixed; top: calc(env(safe-area-inset-top) + 10px); right: 12px; z-index: 12;
   display: flex; flex-direction: column; gap: 5px; padding: 8px 11px; border-radius: 12px;
@@ -63,7 +51,6 @@ body {
 }
 .maplibregl-ctrl-group button { background: transparent !important; }
 .maplibregl-ctrl-group button + button { border-top: 1px solid var(--stroke) !important; }
-.app[data-theme="dark"] .maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(1) hue-rotate(180deg); }
 
 /* footer menú Mapa / Métrica */
 .footer {
@@ -78,14 +65,7 @@ body {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
 }
 .footer button .ico { font-size: 18px; line-height: 1; }
-.footer button.on { color: #fff; background: linear-gradient(135deg, #6a4fb0, #8a6fd0); }
-.app[data-theme="dark"] .footer button.on { background: linear-gradient(135deg, #5a3fa0, #8f7ec9); }
-/* MODO CAMPAÑA (temporal): botón activo en dorado, sin importar dark/light
-   (mismo peso que la regla [data-theme="dark"] .on de arriba, para ganarle) */
-.footer button.on-gold,
-.app[data-theme="dark"] .footer button.on-gold {
-  color: #3b2c08; background: linear-gradient(135deg, #e6c34d, #b8860b);
-}
+.footer button.on { color: #3b2c08; background: linear-gradient(135deg, #e6c34d, #b8860b); }
 
 /* tarjeta de info del territorio (fija arriba, no tapa el territorio) */
 .info-card {
@@ -235,19 +215,14 @@ body {
 /* splash / pantalla de bienvenida-carga */
 .splash {
   position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
-  background: #141018; transition: opacity .5s ease;
+  background: #f6f4fb; transition: opacity .5s ease;
 }
-.app[data-theme="light"] .splash { background: #f6f4fb; }
 .splash.out { opacity: 0; pointer-events: none; }
-.splash-inner { text-align: center; animation: splashIn .7s cubic-bezier(.2,.7,.2,1) both; }
+.splash-inner { text-align: center; animation: splashIn .7s cubic-bezier(.2,.7,.2,1) both; color: #7b8290; }
 .splash-mark { width: min(52vw, 210px); height: auto; display: block; margin: 0 auto 16px; }
 .splash .rays { opacity: .4; }
-.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; }
+.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; color: #4b5563; }
 .splash-sub { letter-spacing: .32em; font-size: clamp(11px, 3.2vw, 15px); margin-top: 8px; }
-.app[data-theme="dark"]  .splash-inner { color: #8b93a3; }
-.app[data-theme="dark"]  .splash-title { color: #dfe4ee; }
-.app[data-theme="light"] .splash-inner { color: #7b8290; }
-.app[data-theme="light"] .splash-title { color: #4b5563; }
 @keyframes splashIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .splash-inner { animation: none; } .splash { transition: none; } }
 

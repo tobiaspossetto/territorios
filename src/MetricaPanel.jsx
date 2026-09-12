@@ -8,7 +8,7 @@ function fmtFecha(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
 }
 
-export default function MetricaPanel({ data, theme, meta }) {
+export default function MetricaPanel({ data, meta }) {
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem('metricaOpen') !== '0' } catch (e) { return true }
   })
@@ -42,11 +42,11 @@ export default function MetricaPanel({ data, theme, meta }) {
   const promDias = pasadas > 0 ? Math.round((total * dias) / pasadas) : null
 
   const buckets = [
-    { key: '0', label: 'Sin hacer', n: feats.filter((f) => f.veces === 0).length, color: metricColor(0, theme) },
-    { key: '1', label: '1 vez', n: feats.filter((f) => f.veces === 1).length, color: metricColor(1, theme) },
-    { key: '2', label: '2 veces', n: feats.filter((f) => f.veces === 2).length, color: metricColor(2, theme) },
-    { key: '3-4', label: '3-4 veces', n: feats.filter((f) => f.veces >= 3 && f.veces <= 4).length, color: metricColor(3, theme) },
-    { key: '5+', label: '+5 veces', n: feats.filter((f) => f.veces >= 5).length, color: metricColor(5, theme) },
+    { key: '0', label: 'Sin hacer', n: feats.filter((f) => f.veces === 0).length, color: metricColor(0) },
+    { key: '1', label: '1 vez', n: feats.filter((f) => f.veces === 1).length, color: metricColor(1) },
+    { key: '2', label: '2 veces', n: feats.filter((f) => f.veces === 2).length, color: metricColor(2) },
+    { key: '3-4', label: '3-4 veces', n: feats.filter((f) => f.veces >= 3 && f.veces <= 4).length, color: metricColor(3) },
+    { key: '5+', label: '+5 veces', n: feats.filter((f) => f.veces >= 5).length, color: metricColor(5) },
   ]
   const maxN = Math.max(1, ...buckets.map((b) => b.n))
 

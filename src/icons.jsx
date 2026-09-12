@@ -27,18 +27,6 @@ export const IconPath = (p) => (
   </svg>
 )
 
-export const IconSun = (p) => (
-  <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-  </svg>
-)
-
-export const IconMoon = (p) => (
-  <svg {...base} {...p}>
-    <path d="M21 12.8A8 8 0 1 1 11.2 3 6.2 6.2 0 0 0 21 12.8Z" />
-  </svg>
-)
 
 export const IconInfo = (p) => (
   <svg {...base} {...p}>

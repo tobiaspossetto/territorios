@@ -1,28 +1,22 @@
 export const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 
-// Estilos vectoriales MapTiler (stock). Look futurista custom => editor MapTiler Cloud (paso futuro).
-export const STYLES = {
-  dark:  `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${MAPTILER_KEY}`,
-  light: `https://api.maptiler.com/maps/streets-v2-light/style.json?key=${MAPTILER_KEY}`,
-}
+// Estilo vectorial MapTiler (stock, claro). Look futurista custom => editor MapTiler Cloud (paso futuro).
+export const MAP_STYLE = `https://api.maptiler.com/maps/streets-v2-light/style.json?key=${MAPTILER_KEY}`
 
-// Polígonos en modo MAPA (territorios) — borde neón grueso en dark, azul sobrio en light.
+// Polígonos de territorio: dorado sobre blanco (misma paleta en Mapa, Campaña y
+// selección de Métrica). "hecho" es solo de Campaña: un territorio marcado C
+// cuya pasada ya se completó (Inicio y Fin) se pinta verde para distinguirlo
+// de lo recién asignado.
 export const COLORS = {
-  dark:  { fill: '#7a5cc0', fillOpacity: 0.07, stroke: '#b6a3e6', glow: '#6a3fd0', neon: true,
-           coreWidth: 2.6, glowWidth: 10, glowBlur: 12, label: '#efe9f8', labelHalo: '#12101a' },
-  light: { fill: '#6a4fb0', fillOpacity: 0.16, stroke: '#4e3b8f', glow: '#4e3b8f', neon: false,
-           coreWidth: 1.8, glowWidth: 0, glowBlur: 0, label: '#2a2733', labelHalo: '#ffffff' },
-  // paleta MODO CAMPAÑA (temporal, del mes) — dorado sobre blanco, sin variante dark/light.
-  // "activo": asignado esta semana, todavía sin completar. "hecho": ya se hizo
-  // (todas sus filas marcadas C tienen Inicio y Fin) -> se pinta en rojo para
-  // distinguirlo de lo nuevo que se va asignando.
-  campana: { fill: '#d4af37', fillOpacity: 0.22, stroke: '#8a6a12', glow: '#d4af37', neon: false,
-             coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#4a3a08', labelHalo: '#ffffff' },
-  campanaHecho: { fill: '#2e9e5b', fillOpacity: 0.22, stroke: '#1f6e3f', glow: '#2e9e5b', neon: false,
-                  coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#1c4a2c', labelHalo: '#ffffff' },
+  fill: '#d4af37', fillOpacity: 0.2, stroke: '#8a6a12', glow: '#d4af37', neon: false,
+  coreWidth: 2, glowWidth: 0, glowBlur: 0, label: '#4a3a08', labelHalo: '#ffffff',
+}
+export const COLORS_HECHO = {
+  fill: '#2e9e5b', fillOpacity: 0.22, stroke: '#1f6e3f', glow: '#2e9e5b', neon: false,
+  coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#1c4a2c', labelHalo: '#ffffff',
 }
 
-// Estilo OFFLINE: base dark desde el extracto local zona.pmtiles + glyphs locales.
+// Estilo OFFLINE: base desde el extracto local zona.pmtiles + glyphs locales.
 // Se usa solo cuando no hay conexión (online sigue con MapTiler, sin cambios).
 export function offlineStyle() {
   const base = new URL('./', location.href).href
@@ -43,19 +37,19 @@ export function offlineStyle() {
 }
 
 // Escala de la MÉTRICA (veces completado): verde (0/1) -> rojo (más).
-const METRIC_ZERO = { dark: '#3a5f4f', light: '#8aa99a' }
+const METRIC_ZERO = '#8aa99a'
 const METRIC_STEPS = { 1: '#2e9e5b', 2: '#9ccc3c', 3: '#f4c020', 4: '#f57c00', 5: '#d32f2f' }
 
-export function metricColor(v, theme) {
-  if (v <= 0) return METRIC_ZERO[theme]
+export function metricColor(v) {
+  if (v <= 0) return METRIC_ZERO
   if (v >= 5) return METRIC_STEPS[5]
   return METRIC_STEPS[v]
 }
 
 // Expresión MapLibre para pintar el fill por 'veces'.
-export function metricFillExpr(theme) {
+export function metricFillExpr() {
   return ['step', ['get', 'veces'],
-    METRIC_ZERO[theme],
+    METRIC_ZERO,
     1, METRIC_STEPS[1], 2, METRIC_STEPS[2], 3, METRIC_STEPS[3], 4, METRIC_STEPS[4], 5, METRIC_STEPS[5]]
 }
 

@@ -3,23 +3,17 @@ import Map, { Source, Layer, NavigationControl, GeolocateControl } from 'react-m
 import maplibregl from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { STYLES, COLORS, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
+import { MAP_STYLE, COLORS, COLORS_HECHO, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
 import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
-import { IconMap, IconChart, IconPath, IconSun, IconMoon, IconLogo, IconWhatsapp } from './icons.jsx'
+import { IconMap, IconChart, IconPath, IconLogo, IconWhatsapp } from './icons.jsx'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
   maplibregl.addProtocol('pmtiles', new Protocol().tile)
   window.__pmtilesReg = true
-}
-
-function getInitialTheme() {
-  try {
-    return localStorage.getItem('theme') || 'light'
-  } catch (e) { return 'light' }
 }
 
 // bbox de una geometría GeoJSON (Polygon o MultiPolygon)
@@ -162,7 +156,6 @@ function toLabelFC(fc) {
 }
 
 export default function App() {
-  const [theme, setTheme] = useState(getInitialTheme)
   // 'campana' es el default de este mes (MODO CAMPAÑA temporal); para volver a
   // abrir siempre en Mapa alcanza con cambiar este valor a 'mapa'.
   const [mode, setMode] = useState('campana') // 'mapa' | 'metrica' | 'campana'
@@ -235,7 +228,6 @@ export default function App() {
   }, [])
   useEffect(() => { if (!splash && mapRef.current) mapRef.current.resize() }, [splash])
   useEffect(() => { if (import.meta.env.DEV && mapRef.current) window.__map = mapRef.current.getMap() })
-  useEffect(() => { try { localStorage.setItem('theme', theme) } catch (e) {} }, [theme])
 
   // online -> MapTiler (igual que siempre); offline -> base local PMTiles (fallback)
   useEffect(() => {
@@ -379,27 +371,27 @@ export default function App() {
 
   const isMet = mode === 'metrica'
   const isCamp = mode === 'campana'
-  const c = isCamp ? COLORS.campana : COLORS[theme]
-  // MODO CAMPAÑA: "hecho" (ya se completó esta semana) se pinta verde en vez de
-  // dorado, para distinguirlo de lo recién asignado ("activo"). El territorio
-  // SELECCIONADO es un solo feature -> alcanza con mirar su estado en JS; los
-  // territorios sin seleccionar se pintan todos juntos -> esos necesitan una
-  // expresión de MapLibre que lea la propiedad por feature.
-  const ch = COLORS.campanaHecho
+  // Paleta única (dorado) para Mapa, Métrica y Campaña. "hecho" (verde) es un
+  // matiz exclusivo de Campaña: un territorio marcado C cuya pasada ya se
+  // completó esta semana, para distinguirlo de lo recién asignado ("activo").
+  // El territorio SELECCIONADO es un solo feature -> alcanza con mirar su
+  // estado en JS; los territorios sin seleccionar se pintan todos juntos ->
+  // esos necesitan una expresión de MapLibre que lea la propiedad por feature.
+  const c = COLORS
+  const ch = COLORS_HECHO
   const selFeat = isCamp && selected && terr ? terr.features.find(f => f.properties.territorio === selected) : null
   const selHecho = !!(selFeat && selFeat.properties.campania_hecho)
   const sel = selected || '__none__'
-  // MODO CAMPAÑA: paleta fija dorado/blanco (o verde si "hecho"), no depende de dark/light
-  const manzBorder = isCamp ? 'rgba(138,106,18,.45)' : (theme === 'dark' ? 'rgba(182,163,230,.5)' : 'rgba(78,59,143,.4)')
-  const highlight = isCamp ? (selHecho ? ch.stroke : c.stroke) : (theme === 'dark' ? '#d9c8ff' : '#4e3b8f')
-  const lblTxt = isCamp ? (selHecho ? ch.label : c.label) : (theme === 'dark' ? '#ffffff' : '#0f1520')
-  const lblHalo = isCamp ? 'rgba(255,255,255,.95)' : (theme === 'dark' ? 'rgba(10,8,18,.95)' : 'rgba(255,255,255,.95)')
+  const manzBorder = 'rgba(138,106,18,.45)'
+  const highlight = isCamp && selHecho ? ch.stroke : c.stroke
+  const lblTxt = '#0f1520'          // nro de manzana: neutro, no es el acento
+  const lblHalo = 'rgba(255,255,255,.95)'
   // nro de territorio: un solo tono (calle-borde-label, solo el seleccionado) y
   // una expresión por feature (terr-label/-near, se ven todos los marcados juntos)
-  const terrLblColorPlain = isCamp ? (selHecho ? ch.label : c.label) : (theme === 'dark' ? '#b6a3e6' : '#6a4fb0')
+  const terrLblColorPlain = isCamp && selHecho ? ch.label : c.label
   const terrLblColorExpr = isCamp
     ? ['case', ['==', ['get', 'campania_hecho'], true], ch.label, c.label]
-    : terrLblColorPlain
+    : c.label
 
   // --- capa TERRITORIO (unión) ---
   // MODO CAMPAÑA: solo se dibujan los territorios marcados (property campania)
@@ -411,7 +403,7 @@ export default function App() {
   const terrFill = {
     id: 'terr-fill', type: 'fill',
     ...(isCamp ? { filter: campFilter } : {}),
-    paint: { 'fill-color': isMet ? metricFillExpr(theme) : (isCamp ? campFillExpr : c.fill), 'fill-opacity': isMet ? 0.7 : c.fillOpacity },
+    paint: { 'fill-color': isMet ? metricFillExpr() : (isCamp ? campFillExpr : c.fill), 'fill-opacity': isMet ? 0.7 : c.fillOpacity },
   }
   const glowBase = (!isMet && c.neon) ? 0.6 : 0
   const terrGlow = {
@@ -429,7 +421,7 @@ export default function App() {
     id: 'terr-line', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
     ...(isCamp ? { filter: campFilter } : {}),
     paint: {
-      'line-color': isMet ? (theme === 'dark' ? 'rgba(255,255,255,.4)' : 'rgba(20,30,60,.5)') : (isCamp ? campStrokeExpr : c.stroke),
+      'line-color': isMet ? 'rgba(20,30,60,.5)' : (isCamp ? campStrokeExpr : c.stroke),
       'line-width': isMet ? 1.2 : c.coreWidth,
       // al seleccionar: atenuar el resto para que destaque el elegido
       'line-opacity': selected ? ['case', ['==', ['get', 'territorio'], selected], 1, 0.15] : 1,
@@ -477,7 +469,7 @@ export default function App() {
   // --- capa MANZANAS ---
   const manzFillSel = {
     id: 'manz-fill-sel', type: 'fill', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'fill-color': isCamp ? (selHecho ? ch.fill : c.fill) : (theme === 'dark' ? '#8a6fd0' : '#6a4fb0'), 'fill-opacity': 0.16 },
+    paint: { 'fill-color': isCamp && selHecho ? ch.fill : c.fill, 'fill-opacity': 0.16 },
   }
   const manzLine = {
     id: 'manz-line', type: 'line',
@@ -492,7 +484,7 @@ export default function App() {
   }
   const manzLineSel = {
     id: 'manz-line-sel', type: 'line', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'line-color': isCamp ? (selHecho ? ch.stroke : c.stroke) : (theme === 'dark' ? '#c9b6f0' : '#4e3b8f'), 'line-width': 1.4, 'line-opacity': 1 },
+    paint: { 'line-color': isCamp && selHecho ? ch.stroke : c.stroke, 'line-width': 1.4, 'line-opacity': 1 },
   }
   // --- manzanas TACHADAS (solo al entrar por URL con ?m=...) ---
   // filtro que nunca matchea si no hay tachado vigente
@@ -512,7 +504,7 @@ export default function App() {
     id: 'manz-tach-x-halo', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': theme === 'dark' ? 'rgba(10,8,18,.75)' : 'rgba(255,255,255,.8)',
+      'line-color': 'rgba(255,255,255,.8)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 13, 4, 17, 8],
     },
   }
@@ -552,10 +544,10 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-theme={theme}>
+    <div className="app">
       <Map
         ref={mapRef}
-        mapStyle={online ? STYLES[isCamp ? 'light' : theme] : offlineStyle()}
+        mapStyle={online ? MAP_STYLE : offlineStyle()}
         initialViewState={{ longitude: -62.03, latitude: -31.43, zoom: 12, pitch: 0, bearing: 0 }}
         interactiveLayerIds={['terr-fill']}
         onClick={onClick}
@@ -632,13 +624,6 @@ export default function App() {
         <IconLogo className="logo" />
         <h1>Congregación Este, SF</h1>
       </div>
-      {/* paleta de Campaña es fija (dorado/blanco): el toggle no aplica en esa vista */}
-      {!isCamp && (
-        <button className="themeBtn" aria-label="Cambiar tema"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-          {theme === 'dark' ? <IconSun /> : <IconMoon />}
-        </button>
-      )}
       {isCamp && (
         <div className="camp-legend">
           <span><i className="dot-activo" />Activo</span>
@@ -670,10 +655,10 @@ export default function App() {
         />
       )}
 
-      {isMet && <MetricaPanel data={terr} theme={theme} meta={meta} />}
+      {isMet && <MetricaPanel data={terr} meta={meta} />}
 
       <nav className="footer">
-        <button className={isCamp ? 'on on-gold' : ''} onClick={() => setMode('campana')}>
+        <button className={isCamp ? 'on' : ''} onClick={() => setMode('campana')}>
           <IconPath /><span>Campaña</span>
         </button>
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>

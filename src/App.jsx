@@ -8,7 +8,7 @@ import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
-import { IconMap, IconChart, IconPath, IconLogo, IconWhatsapp } from './icons.jsx'
+import { IconMap, IconChart, IconPath, IconWhatsapp } from './icons.jsx'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
@@ -621,7 +621,7 @@ export default function App() {
       </Map>
 
       <div className="topbar">
-        <IconLogo className="logo" />
+        <img src="logo-furgon.png" className="logo" alt="" />
         <h1>Congregación Este, SF</h1>
       </div>
       {isCamp && (

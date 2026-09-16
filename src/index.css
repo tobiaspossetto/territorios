@@ -9,7 +9,7 @@ body {
 /* tokens de la app (paleta única, dorado — sin modo oscuro) */
 .app {
   position: fixed; inset: 0;
-  --panel: rgba(250,249,252,.95); --stroke: rgba(60,45,10,.16);
+  --panel: rgba(250,246,235,.95); --stroke: rgba(60,45,10,.16);
   --txt: #2a2733; --muted: #6b6580; --accent: #8a6a12; --track: rgba(60,45,10,.1);
 }
 
@@ -24,7 +24,7 @@ body {
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 4px 16px rgba(0,0,0,.3); pointer-events: none; max-width: calc(100vw - 80px);
 }
-.topbar .logo { width: 34px; height: 18px; flex: none; color: var(--txt); }
+.topbar .logo { height: 28px; width: auto; flex: none; display: block; }
 .topbar h1 { font-size: 15px; margin: 0; color: var(--txt); font-weight: 700; letter-spacing: .2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -215,13 +215,12 @@ body {
 /* splash / pantalla de bienvenida-carga */
 .splash {
   position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
-  background: #f6f4fb; transition: opacity .5s ease;
+  background: #f7f1e2; transition: opacity .5s ease;
 }
 .splash.out { opacity: 0; pointer-events: none; }
 .splash-inner { text-align: center; animation: splashIn .7s cubic-bezier(.2,.7,.2,1) both; color: #7b8290; }
 .splash-mark { width: min(52vw, 210px); height: auto; display: block; margin: 0 auto 16px; }
-.splash .rays { opacity: .4; }
-.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; color: #4b5563; }
+.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; color: #5c4324; }
 .splash-sub { letter-spacing: .32em; font-size: clamp(11px, 3.2vw, 15px); margin-top: 8px; }
 @keyframes splashIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .splash-inner { animation: none; } .splash { transition: none; } }

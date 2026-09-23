@@ -8,7 +8,10 @@ import MetricaPanel from './MetricaPanel.jsx'
 import Splash from './Splash.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
-import { IconMap, IconChart, IconPath, IconWhatsapp } from './icons.jsx'
+import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, IconList } from './icons.jsx'
+import AdminLogin from './AdminLogin.jsx'
+import AdminPanel from './AdminPanel.jsx'
+import { loadOverlay, applyOverlay, isAdminSession, isCampaniaModoActivo } from './adminData.js'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
@@ -156,9 +159,11 @@ function toLabelFC(fc) {
 }
 
 export default function App() {
-  // 'campana' es el default de este mes (MODO CAMPAÑA temporal); para volver a
-  // abrir siempre en Mapa alcanza con cambiar este valor a 'mapa'.
-  const [mode, setMode] = useState('campana') // 'mapa' | 'metrica' | 'campana'
+  // el admin puede apagar "modo campaña" (panel de registro) -> esa vista
+  // desaparece también acá, para todos; si está prendido sigue siendo la
+  // vista default del mes
+  const [campModoOn, setCampModoOn] = useState(isCampaniaModoActivo)
+  const [mode, setMode] = useState(() => (isCampaniaModoActivo() ? 'campana' : 'mapa')) // 'mapa' | 'metrica' | 'campana'
   const [terr, setTerr] = useState(null)
   const [manz, setManz] = useState(null)
   const [meta, setMeta] = useState(null)
@@ -171,16 +176,26 @@ export default function App() {
   const [bordeCalles, setBordeCalles] = useState(null)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
+  // ADMIN (PoC local, ver adminData.js): login + "modo registro" que escriben
+  // en localStorage y se superponen a los datos reales sin tocar el geojson.
+  const [adminOn, setAdminOn] = useState(isAdminSession)
+  const [showLogin, setShowLogin] = useState(false)
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [adminInitialQuery, setAdminInitialQuery] = useState('')
+  const [overlay, setOverlay] = useState(loadOverlay)
+  const [registroBase, setRegistroBase] = useState([])
   const mapRef = useRef(null)
   const geoRef = useRef(null)
-  const terrLabels = useMemo(() => (terr ? toLabelFC(terr) : null), [terr])
-  const manzLabels = useMemo(() => (manz ? toLabelFC(manz) : null), [manz])
+  const terrView = useMemo(() => applyOverlay(terr, overlay, registroBase), [terr, overlay, registroBase])
+  const manzView = useMemo(() => applyOverlay(manz, overlay, registroBase), [manz, overlay, registroBase])
+  const terrLabels = useMemo(() => (terrView ? toLabelFC(terrView) : null), [terrView])
+  const manzLabels = useMemo(() => (manzView ? toLabelFC(manzView) : null), [manzView])
 
   // diagonales (la "X") de las manzanas tachadas: ocupan la manzana completa
   const tachXFC = useMemo(() => {
-    if (!manz || !selected || !tachadas || !tachadas.length) return null
+    if (!manzView || !selected || !tachadas || !tachadas.length) return null
     const feats = []
-    for (const f of manz.features) {
+    for (const f of manzView.features) {
       const p = f.properties
       if (p.territorio !== selected || !tachadas.includes(String(p.manzana))) continue
       // diagonales usando los vértices reales de la manzana (respeta la rotación)
@@ -193,7 +208,7 @@ export default function App() {
       }
     }
     return { type: 'FeatureCollection', features: feats }
-  }, [manz, selected, tachadas])
+  }, [manzView, selected, tachadas])
   const ready = useRef({ data: false, map: false, time: false, done: false })
   const deepLinkDone = useRef(false)
 
@@ -218,6 +233,9 @@ export default function App() {
     ]).then(([t, m]) => { setTerr(t); setManz(m); ready.current.data = true; hideSplash() })
       .catch(console.error)
     fetch('meta.json').then(r => r.json()).then(setMeta).catch(() => {})
+    // registro.json: export LOCAL para el modo admin (PoC), no existe en el
+    // deploy real (ver .gitignore) -> si falta, la tabla admin arranca vacía
+    fetch('registro.json').then(r => r.ok ? r.json() : []).then(setRegistroBase).catch(() => {})
   }, [hideSplash])
 
   useEffect(() => {
@@ -260,7 +278,7 @@ export default function App() {
 
   // selecciona un territorio (usado por click en mapa, buscador y deep-link)
   const selectTerr = useCallback((id, opts = {}) => {
-    const feat = terr && terr.features.find(x => x.properties.territorio === id)
+    const feat = terrView && terrView.features.find(x => x.properties.territorio === id)
     if (!feat) return
     setSelected(id)
     setPopup({ ...feat.properties })
@@ -271,7 +289,7 @@ export default function App() {
     const cam = { padding: { top: 140, bottom: 70, left: 40, right: 40 }, maxZoom: 16.5, duration: 650 }
     if (opts.tilt) { cam.pitch = 38; cam.bearing = -16; cam.duration = 950 }  // vista 3D leve (deep-link)
     if (mapRef.current) mapRef.current.fitBounds(bboxOf(feat.geometry), cam)
-  }, [terr])
+  }, [terrView])
 
   const clearTerr = useCallback(() => {
     setSelected(null); setPopup(null); setTachadas(null); setUrlTerr(null)
@@ -326,6 +344,14 @@ export default function App() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
   }, [popup])
 
+  // acceso directo al registro de ESTE territorio desde su ficha -> si no
+  // hay sesión admin, pide login primero (el filtro queda listo para cuando entre)
+  const abrirRegistroDe = useCallback((territorio) => {
+    setAdminInitialQuery(territorio.replace(/\D/g, ''))
+    if (adminOn) setShowAdminPanel(true)
+    else setShowLogin(true)
+  }, [adminOn])
+
   // calles limítrofes: al seleccionar (y cuando el mapa quedó quieto), leer las
   // etiquetas de calle ya renderizadas y rotular cada lado del territorio
   useEffect(() => {
@@ -371,7 +397,7 @@ export default function App() {
 
   const isMet = mode === 'metrica'
   const isCamp = mode === 'campana'
-  // Paleta única (dorado) para Mapa, Métrica y Campaña. "hecho" (verde) es un
+  // Paleta única naranja/azul para Mapa, Métrica y Campaña. "hecho" (verde) es un
   // matiz exclusivo de Campaña: un territorio marcado C cuya pasada ya se
   // completó esta semana, para distinguirlo de lo recién asignado ("activo").
   // El territorio SELECCIONADO es un solo feature -> alcanza con mirar su
@@ -379,12 +405,12 @@ export default function App() {
   // esos necesitan una expresión de MapLibre que lea la propiedad por feature.
   const c = COLORS
   const ch = COLORS_HECHO
-  const selFeat = isCamp && selected && terr ? terr.features.find(f => f.properties.territorio === selected) : null
+  const selFeat = isCamp && selected && terrView ? terrView.features.find(f => f.properties.territorio === selected) : null
   const selHecho = !!(selFeat && selFeat.properties.campania_hecho)
   const sel = selected || '__none__'
-  const manzBorder = 'rgba(138,106,18,.45)'
+  const manzBorder = 'rgba(63,111,174,.58)'
   const highlight = isCamp && selHecho ? ch.stroke : c.stroke
-  const lblTxt = '#0f1520'          // nro de manzana: neutro, no es el acento
+  const lblTxt = '#2f4055'          // manzanas: azul carbón, legible sobre mapa claro
   const lblHalo = 'rgba(255,255,255,.95)'
   // nro de territorio: un solo tono (calle-borde-label, solo el seleccionado) y
   // una expresión por feature (terr-label/-near, se ven todos los marcados juntos)
@@ -421,7 +447,7 @@ export default function App() {
     id: 'terr-line', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
     ...(isCamp ? { filter: campFilter } : {}),
     paint: {
-      'line-color': isMet ? 'rgba(20,30,60,.5)' : (isCamp ? campStrokeExpr : c.stroke),
+      'line-color': isMet ? 'rgba(55,51,50,.48)' : (isCamp ? campStrokeExpr : c.stroke),
       'line-width': isMet ? 1.2 : c.coreWidth,
       // al seleccionar: atenuar el resto para que destaque el elegido
       'line-opacity': selected ? ['case', ['==', ['get', 'territorio'], selected], 1, 0.15] : 1,
@@ -504,7 +530,7 @@ export default function App() {
     id: 'manz-tach-x-halo', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': 'rgba(255,255,255,.8)',
+      'line-color': 'rgba(255,255,255,.9)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 13, 4, 17, 8],
     },
   }
@@ -574,16 +600,16 @@ export default function App() {
           trackUserLocation showUserLocation showUserHeading
           positionOptions={{ enableHighAccuracy: true }} onError={onGeoError}
         />
-        {terr && (
-          <Source id="terr" type="geojson" data={terr}>
+        {terrView && (
+          <Source id="terr" type="geojson" data={terrView}>
             <Layer {...terrFill} />
             <Layer {...terrGlow} />
             <Layer {...terrLine} />
             <Layer {...terrSel} />
           </Source>
         )}
-        {manz && (
-          <Source id="manz" type="geojson" data={manz}>
+        {manzView && (
+          <Source id="manz" type="geojson" data={manzView}>
             <Layer {...manzFillSel} />
             <Layer {...manzLine} />
             <Layer {...manzLineSel} />
@@ -635,6 +661,7 @@ export default function App() {
 
       {popup && (
         <div className="info-card">
+          <button className="info-registro" onClick={() => abrirRegistroDe(popup.territorio)} aria-label="Ver en el registro de territorios"><IconList /></button>
           <button className="info-share" onClick={shareTerr} aria-label="Compartir por WhatsApp"><IconWhatsapp /></button>
           <button className="info-close" onClick={clearTerr} aria-label="Cerrar">×</button>
           <div className="info-t"><b>{popup.territorio}</b> · {popup.zona}</div>
@@ -650,17 +677,20 @@ export default function App() {
       {/* en Campaña el buscador solo encuentra los territorios marcados (los únicos visibles) */}
       {!isMet && (
         <Buscador
-          data={isCamp && terr ? { ...terr, features: terr.features.filter(f => f.properties.campania) } : terr}
+          data={isCamp && terrView ? { ...terrView, features: terrView.features.filter(f => f.properties.campania) } : terrView}
           onPick={selectTerr}
         />
       )}
 
-      {isMet && <MetricaPanel data={terr} meta={meta} />}
+      {isMet && <MetricaPanel data={terrView} meta={meta} />}
 
       <nav className="footer">
-        <button className={isCamp ? 'on' : ''} onClick={() => setMode('campana')}>
-          <IconPath /><span>Campaña</span>
-        </button>
+        {/* si el admin apaga "modo campaña" esta vista desaparece para todos */}
+        {campModoOn && (
+          <button className={isCamp ? 'on' : ''} onClick={() => setMode('campana')}>
+            <IconPath /><span>Campaña</span>
+          </button>
+        )}
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
           <IconMap /><span>Mapa</span>
         </button>
@@ -668,6 +698,34 @@ export default function App() {
           <IconChart /><span>Métrica</span>
         </button>
       </nav>
+
+      {/* disparador discreto del modo admin (PoC local, ver adminData.js) */}
+      <button
+        className={'admin-fab' + (adminOn ? ' on' : '')}
+        aria-label={adminOn ? 'Abrir registro de territorios' : 'Acceso admin'}
+        onClick={() => (adminOn ? setShowAdminPanel(true) : setShowLogin(true))}
+      >
+        {adminOn ? <IconLockOpen /> : <IconLock />}
+      </button>
+
+      {showLogin && (
+        <AdminLogin
+          onClose={() => setShowLogin(false)}
+          onSuccess={() => { setAdminOn(true); setShowLogin(false); setShowAdminPanel(true) }}
+        />
+      )}
+
+      {showAdminPanel && (
+        <AdminPanel
+          data={terrView}
+          registroBase={registroBase}
+          onChange={setOverlay}
+          onClose={() => setShowAdminPanel(false)}
+          onLogout={() => { setAdminOn(false); setShowAdminPanel(false) }}
+          onCampModoChange={(on) => { setCampModoOn(on); if (!on) setMode((m) => (m === 'campana' ? 'mapa' : m)) }}
+          initialQuery={adminInitialQuery}
+        />
+      )}
 
       {splash && <Splash out={splashOut} />}
     </div>

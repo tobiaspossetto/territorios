@@ -9,9 +9,10 @@ const MAX_ROWS = 20
 const SLOTS_PER_ROW = 4
 const SLOT_STARTS = [135.3, 242.0, 348.7, 455.4]
 
-export function serviceYear(now = new Date()) {
+export function serviceYear(now = new Date(), offset = 0) {
   const year = now.getFullYear()
-  const startYear = now.getMonth() >= 8 ? year : year - 1
+  const currentStartYear = now.getMonth() >= 8 ? year : year - 1
+  const startYear = currentStartYear + offset
   return {
     label: `${startYear}-${startYear + 1}`,
     start: `${startYear}-09-01`,
@@ -80,8 +81,8 @@ async function createTerritoryPdf(templateBytes, fontBytes, territorio, filas, s
   return pdf.save()
 }
 
-export async function generarS13Zip(filas, territorios, now = new Date()) {
-  const sy = serviceYear(now)
+export async function generarS13Zip(filas, territorios, now = new Date(), yearOffset = 0) {
+  const sy = serviceYear(now, yearOffset)
   const response = await fetch(TEMPLATE_URL)
   if (!response.ok) throw new Error('No se pudo cargar la plantilla S-13.')
   const templateBytes = await response.arrayBuffer()

@@ -26,6 +26,7 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
   const [errorTerr, setErrorTerr] = useState(false)
   const [full, setFull] = useState(false)
   const [generandoS13, setGenerandoS13] = useState(false)
+  const [generandoS13Anterior, setGenerandoS13Anterior] = useState(false)
   const [errorS13, setErrorS13] = useState('')
 
   const refresh = (next) => { setOverlayState(next); onChange(next) }
@@ -86,17 +87,18 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
-  const generarS13 = async () => {
-    setGenerandoS13(true)
+  const generarS13 = async (yearOffset = 0) => {
+    const setGenerando = yearOffset === -1 ? setGenerandoS13Anterior : setGenerandoS13
+    setGenerando(true)
     setErrorS13('')
     try {
-      const result = await generarS13Zip(filas, territoriosValidos)
+      const result = await generarS13Zip(filas, territoriosValidos, new Date(), yearOffset)
       descargarBlob(result.blob, result.filename)
     } catch (error) {
       console.error(error)
       setErrorS13('No se pudieron generar los S-13. Volvé a intentarlo.')
     } finally {
-      setGenerandoS13(false)
+      setGenerando(false)
     }
   }
 
@@ -218,8 +220,11 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
         </div>
 
         <div className="admin-panel-foot">
-          <button className="admin-foot-btn primary" onClick={generarS13} disabled={generandoS13}>
+          <button className="admin-foot-btn primary" onClick={() => generarS13(0)} disabled={generandoS13 || generandoS13Anterior}>
             {generandoS13 ? 'Generando…' : 'Generar S-13'}
+          </button>
+          <button className="admin-foot-btn" onClick={() => generarS13(-1)} disabled={generandoS13 || generandoS13Anterior}>
+            {generandoS13Anterior ? 'Generando…' : 'S-13 año anterior'}
           </button>
           <button className="admin-foot-btn" onClick={exportar}>Exportar Excel</button>
           <button className="admin-foot-btn" onClick={() => { resetOverlay(); refresh(loadOverlay()) }}>

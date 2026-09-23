@@ -13,8 +13,8 @@ const firebaseConfig = {
 
 export const firebaseConfigured = Object.values(firebaseConfig).every(Boolean)
 
-// Mientras falte la configuración, la PoC local sigue funcionando sin cambios.
-// Esto permite conectar y verificar Firebase antes de migrar lectores/escritores.
+// Sin configuración, el mapa público puede seguir usando sus GeoJSON estáticos;
+// el acceso administrador simplemente queda deshabilitado.
 export const firebaseApp = firebaseConfigured
   ? (getApps().length ? getApp() : initializeApp(firebaseConfig))
   : null

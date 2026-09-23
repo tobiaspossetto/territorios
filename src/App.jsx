@@ -420,7 +420,7 @@ export default function App() {
 
   const isMet = mode === 'metrica'
   const isCamp = mode === 'campana'
-  // Paleta única naranja/azul para Mapa, Métrica y Campaña. "hecho" (verde) es un
+  // Paleta dorada para Mapa, Métrica y Campaña. "hecho" (verde) es un
   // matiz exclusivo de Campaña: un territorio marcado C cuya pasada ya se
   // completó esta semana, para distinguirlo de lo recién asignado ("activo").
   // El territorio SELECCIONADO es un solo feature -> alcanza con mirar su
@@ -431,9 +431,9 @@ export default function App() {
   const selFeat = isCamp && selected && terrView ? terrView.features.find(f => f.properties.territorio === selected) : null
   const selHecho = !!(selFeat && selFeat.properties.campania_hecho)
   const sel = selected || '__none__'
-  const manzBorder = 'rgba(63,111,174,.58)'
+  const manzBorder = 'rgba(138,106,18,.45)'
   const highlight = isCamp && selHecho ? ch.stroke : c.stroke
-  const lblTxt = '#2f4055'          // manzanas: azul carbón, legible sobre mapa claro
+  const lblTxt = '#0f1520'
   const lblHalo = 'rgba(255,255,255,.95)'
   // nro de territorio: un solo tono (calle-borde-label, solo el seleccionado) y
   // una expresión por feature (terr-label/-near, se ven todos los marcados juntos)
@@ -470,7 +470,7 @@ export default function App() {
     id: 'terr-line', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' },
     ...(isCamp ? { filter: campFilter } : {}),
     paint: {
-      'line-color': isMet ? 'rgba(55,51,50,.48)' : (isCamp ? campStrokeExpr : c.stroke),
+      'line-color': isMet ? 'rgba(20,30,60,.5)' : (isCamp ? campStrokeExpr : c.stroke),
       'line-width': isMet ? 1.2 : c.coreWidth,
       // al seleccionar: atenuar el resto para que destaque el elegido
       'line-opacity': selected ? ['case', ['==', ['get', 'territorio'], selected], 1, 0.15] : 1,
@@ -553,7 +553,7 @@ export default function App() {
     id: 'manz-tach-x-halo', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': 'rgba(255,255,255,.9)',
+      'line-color': 'rgba(255,255,255,.8)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 13, 4, 17, 8],
     },
   }

@@ -1,19 +1,17 @@
 export const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 
-// Capa clara de calles utilizada originalmente en la aplicación.
-export const MAP_STYLE = `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`
+// Capa clara, blanca y sin relieve cromático usada antes del rediseño.
+export const MAP_STYLE = `https://api.maptiler.com/maps/streets-v2-light/style.json?key=${MAPTILER_KEY}`
 
-// Polígonos de territorio: naranja sobre mapa oscuro (misma paleta en Mapa,
-// Campaña y selección de Métrica). "hecho" es solo de Campaña: un territorio
-// marcado C cuya pasada ya se completó (Inicio y Fin) se pinta verde para
-// distinguirlo de lo recién asignado.
+// Polígonos de territorio: dorado sobre blanco. "hecho" es solo de Campaña:
+// un territorio marcado C cuya pasada ya se completó se pinta verde.
 export const COLORS = {
-  fill: '#ed7100', fillOpacity: 0.22, stroke: '#d85f00', glow: '#ed7100', neon: false,
-  coreWidth: 2.4, glowWidth: 0, glowBlur: 0, label: '#9b4300', labelHalo: '#ffffff',
+  fill: '#d4af37', fillOpacity: 0.2, stroke: '#8a6a12', glow: '#d4af37', neon: false,
+  coreWidth: 2, glowWidth: 0, glowBlur: 0, label: '#4a3a08', labelHalo: '#ffffff',
 }
 export const COLORS_HECHO = {
-  fill: '#3ea55f', fillOpacity: 0.32, stroke: '#5fc97e', glow: '#3ea55f', neon: false,
-  coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#c8f2d3', labelHalo: '#0a1510',
+  fill: '#2e9e5b', fillOpacity: 0.22, stroke: '#1f6e3f', glow: '#2e9e5b', neon: false,
+  coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#1c4a2c', labelHalo: '#ffffff',
 }
 
 // Estilo OFFLINE: base desde el extracto local zona.pmtiles + glyphs locales.
@@ -25,13 +23,13 @@ export function offlineStyle() {
     glyphs: base + 'fonts/{fontstack}/{range}.pbf',
     sources: { pm: { type: 'vector', url: `pmtiles://${base}zona.pmtiles`, attribution: '© OpenStreetMap' } },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#f4f4f3' } },
-      { id: 'earth', type: 'fill', source: 'pm', 'source-layer': 'earth', paint: { 'fill-color': '#f1f1ef' } },
-      { id: 'landuse', type: 'fill', source: 'pm', 'source-layer': 'landuse', paint: { 'fill-color': '#e5e8e3', 'fill-opacity': 0.65 } },
-      { id: 'water', type: 'fill', source: 'pm', 'source-layer': 'water', paint: { 'fill-color': '#b9d7ec' } },
+      { id: 'bg', type: 'background', paint: { 'background-color': '#0a0f1c' } },
+      { id: 'earth', type: 'fill', source: 'pm', 'source-layer': 'earth', paint: { 'fill-color': '#0e1626' } },
+      { id: 'landuse', type: 'fill', source: 'pm', 'source-layer': 'landuse', paint: { 'fill-color': '#12203a', 'fill-opacity': 0.5 } },
+      { id: 'water', type: 'fill', source: 'pm', 'source-layer': 'water', paint: { 'fill-color': '#0a2036' } },
       { id: 'roads', type: 'line', source: 'pm', 'source-layer': 'roads',
-        paint: { 'line-color': '#c2c2bf', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 16, 2] } },
-      { id: 'buildings', type: 'fill', source: 'pm', 'source-layer': 'buildings', paint: { 'fill-color': '#d7d5d2', 'fill-opacity': 0.7 } },
+        paint: { 'line-color': '#3a4a63', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 16, 2] } },
+      { id: 'buildings', type: 'fill', source: 'pm', 'source-layer': 'buildings', paint: { 'fill-color': '#152036', 'fill-opacity': 0.6 } },
     ],
   }
 }

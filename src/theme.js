@@ -1,8 +1,7 @@
 export const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 
-// Base minimalista y clara: prioriza calles y nombres sin el relieve/colorido
-// del estilo Streets. La interfaz puede ser oscura sin oscurecer el mapa.
-export const MAP_STYLE = `https://api.maptiler.com/maps/base-v4/style.json?key=${MAPTILER_KEY}`
+// Capa clara de calles utilizada originalmente en la aplicación.
+export const MAP_STYLE = `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`
 
 // Polígonos de territorio: naranja sobre mapa oscuro (misma paleta en Mapa,
 // Campaña y selección de Métrica). "hecho" es solo de Campaña: un territorio

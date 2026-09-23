@@ -11,7 +11,11 @@ import { bordeConCalles } from './calles.js'
 import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, IconList } from './icons.jsx'
 import AdminLogin from './AdminLogin.jsx'
 import AdminPanel from './AdminPanel.jsx'
-import { loadOverlay, applyOverlay, isAdminSession, isCampaniaModoActivo } from './adminData.js'
+import {
+  addRecord, applyPublicSummaries, importLegacyIfNeeded, isBootstrapAdmin,
+  logoutFirebase, observeAuth, removeRecord, setCampaignMode,
+  subscribePublicState, subscribeRecords, updateRecord,
+} from './firebaseData.js'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
@@ -159,11 +163,8 @@ function toLabelFC(fc) {
 }
 
 export default function App() {
-  // el admin puede apagar "modo campaña" (panel de registro) -> esa vista
-  // desaparece también acá, para todos; si está prendido sigue siendo la
-  // vista default del mes
-  const [campModoOn, setCampModoOn] = useState(isCampaniaModoActivo)
-  const [mode, setMode] = useState(() => (isCampaniaModoActivo() ? 'campana' : 'mapa')) // 'mapa' | 'metrica' | 'campana'
+  const [campModoOn, setCampModoOn] = useState(false)
+  const [mode, setMode] = useState('mapa') // 'mapa' | 'metrica' | 'campana'
   const [terr, setTerr] = useState(null)
   const [manz, setManz] = useState(null)
   const [meta, setMeta] = useState(null)
@@ -176,18 +177,19 @@ export default function App() {
   const [bordeCalles, setBordeCalles] = useState(null)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
-  // ADMIN (PoC local, ver adminData.js): login + "modo registro" que escriben
-  // en localStorage y se superponen a los datos reales sin tocar el geojson.
-  const [adminOn, setAdminOn] = useState(isAdminSession)
+  const [adminUser, setAdminUser] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [adminInitialQuery, setAdminInitialQuery] = useState('')
-  const [overlay, setOverlay] = useState(loadOverlay)
   const [registroBase, setRegistroBase] = useState([])
+  const [legacyRows, setLegacyRows] = useState([])
+  const [publicSummaries, setPublicSummaries] = useState({})
+  const [adminSyncError, setAdminSyncError] = useState('')
   const mapRef = useRef(null)
   const geoRef = useRef(null)
-  const terrView = useMemo(() => applyOverlay(terr, overlay, registroBase), [terr, overlay, registroBase])
-  const manzView = useMemo(() => applyOverlay(manz, overlay, registroBase), [manz, overlay, registroBase])
+  const adminOn = !!adminUser
+  const terrView = useMemo(() => applyPublicSummaries(terr, publicSummaries), [terr, publicSummaries])
+  const manzView = useMemo(() => applyPublicSummaries(manz, publicSummaries), [manz, publicSummaries])
   const terrLabels = useMemo(() => (terrView ? toLabelFC(terrView) : null), [terrView])
   const manzLabels = useMemo(() => (manzView ? toLabelFC(manzView) : null), [manzView])
 
@@ -211,6 +213,8 @@ export default function App() {
   }, [manzView, selected, tachadas])
   const ready = useRef({ data: false, map: false, time: false, done: false })
   const deepLinkDone = useRef(false)
+  const publicConfigLoaded = useRef(false)
+  const importStarted = useRef(false)
 
   const hideSplash = useCallback(() => {
     const r = ready.current
@@ -233,10 +237,44 @@ export default function App() {
     ]).then(([t, m]) => { setTerr(t); setManz(m); ready.current.data = true; hideSplash() })
       .catch(console.error)
     fetch('meta.json').then(r => r.json()).then(setMeta).catch(() => {})
-    // registro.json: export LOCAL para el modo admin (PoC), no existe en el
-    // deploy real (ver .gitignore) -> si falta, la tabla admin arranca vacía
-    fetch('registro.json').then(r => r.ok ? r.json() : []).then(setRegistroBase).catch(() => {})
+    // Fuente temporal para la migración inicial. Se quitará del Hosting cuando
+    // Firestore confirme la importación completa.
+    fetch('registro.json').then(r => r.ok ? r.json() : []).then(setLegacyRows).catch(() => {})
   }, [hideSplash])
+
+  useEffect(() => observeAuth((user) => {
+    if (user && isBootstrapAdmin(user)) setAdminUser(user)
+    else setAdminUser(null)
+  }), [])
+
+  useEffect(() => subscribePublicState(({ summaries, campaignMode }) => {
+    setPublicSummaries(summaries)
+    setCampModoOn(campaignMode)
+    if (!publicConfigLoaded.current) {
+      publicConfigLoaded.current = true
+      setMode(campaignMode ? 'campana' : 'mapa')
+    } else if (!campaignMode) {
+      setMode((m) => (m === 'campana' ? 'mapa' : m))
+    }
+  }, (error) => console.error('Firebase público:', error)), [])
+
+  useEffect(() => {
+    if (!adminUser) { setRegistroBase([]); return undefined }
+    return subscribeRecords(setRegistroBase, (error) => {
+      console.error(error)
+      setAdminSyncError('No se pudieron sincronizar los registros privados.')
+    })
+  }, [adminUser])
+
+  useEffect(() => {
+    if (!adminUser || !legacyRows.length || importStarted.current) return
+    importStarted.current = true
+    importLegacyIfNeeded(legacyRows, true).catch((error) => {
+      console.error(error)
+      importStarted.current = false
+      setAdminSyncError('No se pudo completar la importación inicial.')
+    })
+  }, [adminUser, legacyRows])
 
   useEffect(() => {
     const r = () => mapRef.current && mapRef.current.resize()
@@ -699,7 +737,7 @@ export default function App() {
         </button>
       </nav>
 
-      {/* disparador discreto del modo admin (PoC local, ver adminData.js) */}
+      {/* disparador discreto del modo admin protegido por Firebase */}
       <button
         className={'admin-fab' + (adminOn ? ' on' : '')}
         aria-label={adminOn ? 'Abrir registro de territorios' : 'Acceso admin'}
@@ -711,7 +749,7 @@ export default function App() {
       {showLogin && (
         <AdminLogin
           onClose={() => setShowLogin(false)}
-          onSuccess={() => { setAdminOn(true); setShowLogin(false); setShowAdminPanel(true) }}
+          onSuccess={(user) => { setAdminUser(user); setShowLogin(false); setShowAdminPanel(true) }}
         />
       )}
 
@@ -719,11 +757,15 @@ export default function App() {
         <AdminPanel
           data={terrView}
           registroBase={registroBase}
-          onChange={setOverlay}
+          onAdd={addRecord}
+          onUpdate={updateRecord}
+          onDelete={removeRecord}
           onClose={() => setShowAdminPanel(false)}
-          onLogout={() => { setAdminOn(false); setShowAdminPanel(false) }}
-          onCampModoChange={(on) => { setCampModoOn(on); if (!on) setMode((m) => (m === 'campana' ? 'mapa' : m)) }}
+          onLogout={async () => { await logoutFirebase(); setAdminUser(null); setShowAdminPanel(false) }}
+          campModoOn={campModoOn}
+          onCampModoChange={setCampaignMode}
           initialQuery={adminInitialQuery}
+          syncError={adminSyncError}
         />
       )}
 

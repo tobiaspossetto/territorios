@@ -6,10 +6,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function bootstrapOwner() {
       return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+        && request.auth.token.email == 'tobigpossetto@gmail.com';
+    }
+
+    function isAdmin() {
+      return bootstrapOwner()
+        || (signedIn()
+          && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true);
     }
 
     // El registro detallado y la configuración de campaña son privados.
@@ -18,6 +24,17 @@ service cloud.firestore {
     }
 
     match /config/{documentId} {
+      allow read: if documentId == 'public';
+      allow write: if isAdmin();
+    }
+
+    // Resumen sin detalle usado por el mapa público.
+    match /territoriosPublicos/{territorioId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /migrations/{migrationId} {
       allow read, write: if isAdmin();
     }
 

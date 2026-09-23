@@ -1,9 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  loadOverlay, agregarFila, editarFila, eliminarFila,
-  filasCombinadas, resetOverlay, overlayCount, setAdminSession,
-  isCampaniaModoActivo, setCampaniaModoActivo, todayISO,
-} from './adminData.js'
+import { todayISO } from './adminData.js'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
 import { generarS13Zip, descargarBlob } from './s13.js'
 
@@ -13,23 +9,20 @@ const FILTROS = [
   { key: 'activo', label: 'Activo' },
 ]
 
-// "Registro de territorios": una sola tabla, igual que el Excel — todas las
-// filas reales + las que se van cargando acá, más nuevas primero. Cada
-// acción escribe en localStorage (ver adminData.js) y el mapa de atrás se
-// actualiza al toque.
-export default function AdminPanel({ data, registroBase, onChange, onLogout, onClose, onCampModoChange, initialQuery }) {
+export default function AdminPanel({
+  data, registroBase, onAdd, onUpdate, onDelete, onLogout, onClose,
+  onCampModoChange, campModoOn, initialQuery, syncError,
+}) {
   const [q, setQ] = useState(initialQuery || '')
   const [filtro, setFiltro] = useState('todos')
-  const [overlay, setOverlayState] = useState(loadOverlay)
-  const [campModoOn, setCampModoOn] = useState(isCampaniaModoActivo)
   const [nuevoTerr, setNuevoTerr] = useState('')
   const [errorTerr, setErrorTerr] = useState(false)
   const [full, setFull] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [generandoS13, setGenerandoS13] = useState(false)
   const [generandoS13Anterior, setGenerandoS13Anterior] = useState(false)
   const [errorS13, setErrorS13] = useState('')
-
-  const refresh = (next) => { setOverlayState(next); onChange(next) }
 
   const territoriosValidos = useMemo(() => {
     if (!data) return new Set()
@@ -40,36 +33,42 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
     [territoriosValidos],
   )
 
-  const filas = useMemo(() => filasCombinadas(registroBase, overlay), [registroBase, overlay])
+  const filas = registroBase || []
 
   const dig = q.replace(/\D/g, '')
   let visibles = dig ? filas.filter((f) => String(parseInt(f.territorio.replace(/\D/g, ''), 10)) === dig || f.territorio.replace(/\D/g, '').startsWith(dig)) : filas
   if (filtro !== 'todos') visibles = visibles.filter((f) => (filtro === 'completado' ? !!f.fin : !f.fin))
-  // último agregado primero: filasCombinadas ya viene en orden de carga (reales
-  // en el orden del Excel, nuevas al final en el orden en que se fueron
-  // agregando acá) -> dar vuelta la lista alcanza, sin mirar fechas
+  // Firestore entrega el orden de creación ascendente; la tabla muestra lo
+  // último agregado primero, igual que el Excel original.
   visibles = visibles.slice().reverse()
 
-  const nCambios = overlayCount(overlay)
-
-  const toggleCampModo = () => {
-    const next = !campModoOn
-    setCampaniaModoActivo(next)
-    setCampModoOn(next)
-    if (onCampModoChange) onCampModoChange(next)
+  const runSave = async (action) => {
+    setSaving(true); setSaveError('')
+    try { await action() }
+    catch (e) { console.error(e); setSaveError('No se pudo guardar. Revisá la conexión e intentá nuevamente.') }
+    finally { setSaving(false) }
   }
-  const salir = () => { setAdminSession(false); onLogout() }
 
-  const toggleCampania = (fila) => refresh(editarFila(fila.id, 'campania', !fila.campania))
+  const toggleCampModo = async () => {
+    const next = !campModoOn
+    await runSave(() => onCampModoChange(next))
+  }
+  const salir = () => runSave(onLogout)
 
-  const agregar = () => {
+  const toggleCampania = (fila) => runSave(() => onUpdate(fila, 'campania', !fila.campania))
+
+  const agregar = async () => {
     // acepta "8", "08", "t8", "T8"... -> siempre normaliza a "T8"
     const n = nuevoTerr.replace(/\D/g, '')
     const t = n ? 'T' + parseInt(n, 10) : ''
     if (!t || !territoriosValidos.has(t)) { setErrorTerr(true); return }
-    refresh(agregarFila(t))
-    setNuevoTerr('')
-    setErrorTerr(false)
+    await runSave(async () => { await onAdd(t); setNuevoTerr(''); setErrorTerr(false) })
+  }
+
+  const editar = (fila, campo, valor) => runSave(() => onUpdate(fila, campo, valor))
+  const eliminar = (fila) => {
+    if (!window.confirm(`¿Eliminar el registro de ${fila.territorio}?`)) return
+    runSave(() => onDelete(fila))
   }
 
   const exportar = () => {
@@ -117,7 +116,7 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
             </div>
           </div>
           <div className="admin-panel-sub">
-            Modo admin (PoC local) · {filas.length} filas · {nCambios > 0 ? `${nCambios} cambio${nCambios === 1 ? '' : 's'} sin sincronizar` : 'sin cambios todavía'}
+            Firebase · {filas.length} filas · {saving ? 'guardando…' : 'sincronizado'}
           </div>
 
           <div className="admin-campmode">
@@ -177,31 +176,29 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
                 <tr><td colSpan={5} className="admin-table-empty">Sin filas para este filtro.</td></tr>
               )}
               {visibles.map((f) => (
-                <tr key={f.id} className={(f.fin ? '' : 'activo') + (f.sim ? ' sim' : '') + (f.editado ? ' editado' : '')}>
+                <tr key={f.id} className={f.fin ? '' : 'activo'}>
                   <td className="admin-table-terr">
-                    <select value={f.territorio} onChange={(e) => refresh(editarFila(f.id, 'territorio', e.target.value))}>
+                    <select value={f.territorio} disabled={saving} onChange={(e) => editar(f, 'territorio', e.target.value)}>
                       {territoriosOrdenados.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
-                    {f.sim && <span className="admin-table-tag">sim</span>}
-                    {f.editado && <span className="admin-table-tag editado">editado</span>}
                   </td>
                   <td>
                     <input
-                      type="date" value={f.inicio} max={f.fin || todayISO()}
-                      onChange={(e) => refresh(editarFila(f.id, 'inicio', e.target.value))}
+                      type="date" value={f.inicio} max={f.fin || todayISO()} disabled={saving}
+                      onChange={(e) => editar(f, 'inicio', e.target.value)}
                     />
                   </td>
                   <td>
                     <input
-                      type="date" value={f.fin || ''} min={f.inicio} max={todayISO()}
-                      onChange={(e) => refresh(editarFila(f.id, 'fin', e.target.value || null))}
+                      type="date" value={f.fin || ''} min={f.inicio} max={todayISO()} disabled={saving}
+                      onChange={(e) => editar(f, 'fin', e.target.value || null)}
                     />
                     {!f.fin && <span className="admin-table-tag activo">activo</span>}
                   </td>
                   <td>
                     <button
                       className={'admin-c-btn' + (f.campania ? ' on' : '')}
-                      disabled={!campModoOn}
+                      disabled={!campModoOn || saving}
                       title={campModoOn ? 'Marcar/quitar esta fila de la campaña' : 'Activá el modo campaña para usar esto'}
                       onClick={() => toggleCampania(f)}
                     >
@@ -209,7 +206,7 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
                     </button>
                   </td>
                   <td>
-                    <button className="admin-mini-btn ghost danger" onClick={() => refresh(eliminarFila(f.id))}>
+                    <button className="admin-mini-btn ghost danger" disabled={saving} onClick={() => eliminar(f)}>
                       Eliminar
                     </button>
                   </td>
@@ -227,14 +224,11 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
             {generandoS13Anterior ? 'Generando…' : 'S-13 año anterior'}
           </button>
           <button className="admin-foot-btn" onClick={exportar}>Exportar Excel</button>
-          <button className="admin-foot-btn" onClick={() => { resetOverlay(); refresh(loadOverlay()) }}>
-            Reiniciar simulación
-          </button>
           <button className="admin-foot-btn danger" onClick={salir}>
             <IconLogout /> Cerrar sesión
           </button>
         </div>
-        {errorS13 && <div className="admin-export-error">{errorS13}</div>}
+        {(errorS13 || saveError || syncError) && <div className="admin-export-error">{errorS13 || saveError || syncError}</div>}
       </div>
     </div>
   )

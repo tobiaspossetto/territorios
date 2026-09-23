@@ -299,6 +299,9 @@ body {
   font-size: 15px; font-weight: 700; font-family: inherit; color: #fff;
   background: #ed7100;
 }
+.admin-btn.google { background: #fff; color: #3b3837; border: 1px solid var(--stroke); }
+.admin-separator { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.admin-separator::before, .admin-separator::after { content: ''; height: 1px; background: var(--stroke); flex: 1; }
 .admin-cancel {
   min-height: 40px; border: 0; border-radius: 12px; cursor: pointer;
   font-size: 13px; font-weight: 600; font-family: inherit; color: var(--muted); background: transparent;

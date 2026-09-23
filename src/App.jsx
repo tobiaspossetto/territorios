@@ -10,11 +10,10 @@ import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
 import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, IconList } from './icons.jsx'
 import AdminLogin from './AdminLogin.jsx'
-import AdminPanel from './AdminPanel.jsx'
+import AdminPanel from './AdminPanelV2.jsx'
 import {
-  addRecord, applyPublicSummaries, isBootstrapAdmin,
-  logoutFirebase, observeAuth, removeRecord, setCampaignMode,
-  subscribePublicState, subscribeRecords, updateRecord,
+  applyPublicSummaries, isBootstrapAdmin, logoutFirebase, observeAuth,
+  saveRecordChanges, setCampaignMode, subscribePublicState, subscribeRecords,
 } from './firebaseData.js'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
@@ -742,9 +741,7 @@ export default function App() {
         <AdminPanel
           data={terrView}
           registroBase={registroBase}
-          onAdd={addRecord}
-          onUpdate={updateRecord}
-          onDelete={removeRecord}
+          onSave={saveRecordChanges}
           onClose={() => setShowAdminPanel(false)}
           onLogout={async () => { await logoutFirebase(); setAdminUser(null); setShowAdminPanel(false) }}
           campModoOn={campModoOn}

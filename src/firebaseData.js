@@ -4,7 +4,7 @@ import {
 } from 'firebase/auth'
 import {
   addDoc, collection, deleteDoc, doc, getDocs, onSnapshot,
-  orderBy, query, setDoc, updateDoc, where,
+  orderBy, query, setDoc, updateDoc, where, writeBatch,
 } from 'firebase/firestore'
 import { firebaseAuth, firestore } from './firebase.js'
 
@@ -104,6 +104,48 @@ export async function removeRecord(record) {
   assertFirebase()
   await deleteDoc(doc(firestore, 'registros', record.id))
   await recomputeTerritory(record.territorio)
+}
+
+// Guarda de una sola vez todos los cambios preparados en la tabla admin.
+// Así editar un campo no modifica Firebase hasta pulsar "Guardar cambios".
+export async function saveRecordChanges({ created = [], updated = [], deleted = [] }) {
+  assertFirebase()
+  const batch = writeBatch(firestore)
+  const affected = new Set()
+
+  created.forEach((record, index) => {
+    const ref = doc(collection(firestore, 'registros'))
+    const now = Date.now() + index
+    batch.set(ref, {
+      territorio: record.territorio,
+      inicio: record.inicio || '',
+      fin: record.fin || null,
+      campania: !!record.campania,
+      createdOrder: record.createdOrder || now,
+      updatedAt: now,
+    })
+    affected.add(record.territorio)
+  })
+
+  updated.forEach(({ record, previousTerritorio }) => {
+    batch.update(doc(firestore, 'registros', record.id), {
+      territorio: record.territorio,
+      inicio: record.inicio || '',
+      fin: record.fin || null,
+      campania: !!record.campania,
+      updatedAt: Date.now(),
+    })
+    affected.add(record.territorio)
+    affected.add(previousTerritorio)
+  })
+
+  deleted.forEach((record) => {
+    batch.delete(doc(firestore, 'registros', record.id))
+    affected.add(record.territorio)
+  })
+
+  await batch.commit()
+  await Promise.all([...affected].filter(Boolean).map(recomputeTerritory))
 }
 
 export async function setCampaignMode(campaignMode) {

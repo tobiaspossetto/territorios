@@ -377,17 +377,19 @@ body {
 .admin-mini-btn.ghost { color: var(--muted); background: transparent; }
 .admin-mini-btn.ghost.danger { color: #e05252; }
 .admin-panel-foot {
-  display: flex; gap: 8px; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--stroke); flex: none;
 }
 .admin-foot-btn {
-  flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--stroke); background: transparent;
+  flex: 1 1 130px; min-height: 44px; border-radius: 12px; border: 1px solid var(--stroke); background: transparent;
   color: var(--txt); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
 .admin-foot-btn.danger { color: #b71c1c; }
 .admin-foot-btn.primary { color: #fff; background: #ed7100; border-color: #ed7100; }
+.admin-foot-btn:disabled { opacity: .55; cursor: wait; }
 .admin-foot-btn svg { width: 16px; height: 16px; }
+.admin-export-error { padding: 0 16px calc(10px + env(safe-area-inset-bottom)); color: #b71c1c; font-size: 11.5px; }
 
 /* tabla plana de registro, tipo Excel (Territorio | Inicio | Fin | Campaña) */
 .admin-add-row { margin-left: auto; display: flex; gap: 6px; align-items: center; }

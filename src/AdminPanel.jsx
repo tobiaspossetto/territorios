@@ -5,6 +5,7 @@ import {
   isCampaniaModoActivo, setCampaniaModoActivo, todayISO,
 } from './adminData.js'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
+import { generarS13Zip, descargarBlob } from './s13.js'
 
 const FILTROS = [
   { key: 'todos', label: 'Todos' },
@@ -24,6 +25,8 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
   const [nuevoTerr, setNuevoTerr] = useState('')
   const [errorTerr, setErrorTerr] = useState(false)
   const [full, setFull] = useState(false)
+  const [generandoS13, setGenerandoS13] = useState(false)
+  const [errorS13, setErrorS13] = useState('')
 
   const refresh = (next) => { setOverlayState(next); onChange(next) }
 
@@ -81,6 +84,20 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
     const a = document.createElement('a')
     a.href = url; a.download = `territorios-${todayISO()}.xls`; a.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  const generarS13 = async () => {
+    setGenerandoS13(true)
+    setErrorS13('')
+    try {
+      const result = await generarS13Zip(filas, territoriosValidos)
+      descargarBlob(result.blob, result.filename)
+    } catch (error) {
+      console.error(error)
+      setErrorS13('No se pudieron generar los S-13. Volvé a intentarlo.')
+    } finally {
+      setGenerandoS13(false)
+    }
   }
 
   return (
@@ -201,7 +218,10 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
         </div>
 
         <div className="admin-panel-foot">
-          <button className="admin-foot-btn primary" onClick={exportar}>Exportar Excel</button>
+          <button className="admin-foot-btn primary" onClick={generarS13} disabled={generandoS13}>
+            {generandoS13 ? 'Generando…' : 'Generar S-13'}
+          </button>
+          <button className="admin-foot-btn" onClick={exportar}>Exportar Excel</button>
           <button className="admin-foot-btn" onClick={() => { resetOverlay(); refresh(loadOverlay()) }}>
             Reiniciar simulación
           </button>
@@ -209,6 +229,7 @@ export default function AdminPanel({ data, registroBase, onChange, onLogout, onC
             <IconLogout /> Cerrar sesión
           </button>
         </div>
+        {errorS13 && <div className="admin-export-error">{errorS13}</div>}
       </div>
     </div>
   )

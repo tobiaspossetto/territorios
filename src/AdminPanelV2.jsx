@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
 import { generarS13Pdf, descargarBlob } from './s13.js'
 import ProgramGenerator from './ProgramGenerator.jsx'
+import AdminUsers from './AdminUsers.jsx'
 
 const FILTROS = [
   { key: 'todos', label: 'Todos' },
@@ -15,7 +16,7 @@ const isTemp = (id) => String(id).startsWith('nuevo-')
 
 export default function AdminPanel({
   data, registroBase, onSave, onLogout, onClose,
-  onCampModoChange, campModoOn, initialQuery, syncError,
+  onCampModoChange, campModoOn, initialQuery, syncError, currentEmail,
 }) {
   const [view, setView] = useState('registros')
   const [q, setQ] = useState(initialQuery || '')
@@ -127,11 +128,12 @@ export default function AdminPanel({
           <div className="admin-tabs">
             <button className={view === 'registros' ? 'on' : ''} onClick={() => setView('registros')}>Registros</button>
             <button className={view === 'programa' ? 'on' : ''} onClick={() => setView('programa')}>Generar programa</button>
+            <button className={view === 'admins' ? 'on' : ''} onClick={() => setView('admins')}>Administradores</button>
           </div>
           {view === 'registros' && <div className="admin-panel-sub">Firebase · {draft.length} filas · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'sincronizado'}</div>}
         </div>
 
-        {view === 'programa' ? <ProgramGenerator /> : <>
+        {view === 'programa' ? <ProgramGenerator /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} /> : <>
           <div className="admin-campmode">
             <div><div className="admin-campmode-label">Modo campaña</div><div className="admin-campmode-sub">{campModoOn ? 'Activo: se puede marcar la columna Campaña.' : 'Apagado: la columna Campaña está bloqueada.'}</div></div>
             <button className={'admin-switch' + (campModoOn ? ' on' : '')} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>

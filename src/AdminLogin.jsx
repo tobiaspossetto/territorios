@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isBootstrapAdmin, loginEmail, loginGoogle, logoutFirebase } from './firebaseData.js'
+import { isAuthorizedAdmin, loginEmail, loginGoogle, logoutFirebase } from './firebaseData.js'
 import { IconLock } from './icons.jsx'
 
 function friendlyError(error) {
@@ -20,7 +20,7 @@ export default function AdminLogin({ onSuccess, onClose }) {
     setBusy(true); setError('')
     try {
       const result = await action()
-      if (!isBootstrapAdmin(result.user)) {
+      if (!await isAuthorizedAdmin(result.user)) {
         await logoutFirebase()
         setError('Esta cuenta no tiene permiso de administrador.')
         return

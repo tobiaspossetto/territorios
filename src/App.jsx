@@ -12,7 +12,7 @@ import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, Ico
 import AdminLogin from './AdminLogin.jsx'
 import AdminPanel from './AdminPanelV2.jsx'
 import {
-  applyPublicSummaries, isBootstrapAdmin, logoutFirebase, observeAuth,
+  applyPublicSummaries, isAuthorizedAdmin, logoutFirebase, observeAuth,
   saveRecordChanges, setCampaignMode, subscribePublicState, subscribeRecords,
 } from './firebaseData.js'
 
@@ -236,10 +236,14 @@ export default function App() {
     fetch('meta.json').then(r => r.json()).then(setMeta).catch(() => {})
   }, [hideSplash])
 
-  useEffect(() => observeAuth((user) => {
-    if (user && isBootstrapAdmin(user)) setAdminUser(user)
-    else setAdminUser(null)
-  }), [])
+  useEffect(() => {
+    let revision = 0
+    return observeAuth(async (user) => {
+      const current = ++revision
+      const allowed = user ? await isAuthorizedAdmin(user) : false
+      if (current === revision) setAdminUser(allowed ? user : null)
+    })
+  }, [])
 
   useEffect(() => subscribePublicState(({ summaries, campaignMode }) => {
     setPublicSummaries(summaries)
@@ -748,6 +752,7 @@ export default function App() {
           onCampModoChange={setCampaignMode}
           initialQuery={adminInitialQuery}
           syncError={adminSyncError}
+          currentEmail={adminUser.email || ''}
         />
       )}
 

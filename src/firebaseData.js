@@ -3,7 +3,7 @@ import {
   signInWithPopup, signOut,
 } from 'firebase/auth'
 import {
-  addDoc, collection, deleteDoc, doc, getDocs, onSnapshot,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot,
   orderBy, query, setDoc, updateDoc, where, writeBatch,
 } from 'firebase/firestore'
 import { firebaseAuth, firestore } from './firebase.js'
@@ -36,6 +36,49 @@ export function logoutFirebase() {
 
 export function isBootstrapAdmin(user) {
   return !!user && !!ADMIN_EMAIL && String(user.email || '').toLowerCase() === ADMIN_EMAIL
+}
+
+export function bootstrapAdminEmail() {
+  return ADMIN_EMAIL
+}
+
+export async function isAuthorizedAdmin(user) {
+  if (isBootstrapAdmin(user)) return true
+  if (!user || !firestore) return false
+  const email = String(user.email || '').trim().toLowerCase()
+  try {
+    if (email) {
+      const byEmail = await getDoc(doc(firestore, 'adminEmails', email))
+      if (byEmail.exists() && byEmail.data().active === true) return true
+    }
+    // Compatibilidad durante la migración con permisos antiguos por UID.
+    const byUid = await getDoc(doc(firestore, 'admins', user.uid))
+    return byUid.exists() && byUid.data().active === true
+  } catch (error) {
+    console.error('Validación de administrador:', error)
+    return false
+  }
+}
+
+export function subscribeAdminEmails(onData, onError) {
+  assertFirebase()
+  const q = query(collection(firestore, 'adminEmails'), orderBy('email', 'asc'))
+  return onSnapshot(q, (snap) => onData(snap.docs.map((d) => ({ id: d.id, ...d.data() }))), onError)
+}
+
+export async function addAdminEmail(value) {
+  assertFirebase()
+  const email = String(value || '').trim().toLowerCase()
+  if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error('invalid-email')
+  await setDoc(doc(firestore, 'adminEmails', email), {
+    email, active: true, updatedAt: Date.now(), updatedBy: firebaseAuth.currentUser?.email || '',
+  }, { merge: true })
+}
+
+export async function removeAdminEmail(value) {
+  assertFirebase()
+  const email = String(value || '').trim().toLowerCase()
+  await deleteDoc(doc(firestore, 'adminEmails', email))
 }
 
 export function subscribeRecords(onData, onError) {

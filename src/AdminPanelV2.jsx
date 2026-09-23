@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
-import { generarS13Zip, descargarBlob } from './s13.js'
+import { generarS13Pdf, descargarBlob } from './s13.js'
 import ProgramGenerator from './ProgramGenerator.jsx'
 
 const FILTROS = [
@@ -106,7 +106,7 @@ export default function AdminPanel({
     const setGenerando = yearOffset === -1 ? setGenerandoS13Anterior : setGenerandoS13
     setGenerando(true); setErrorS13('')
     try {
-      const result = await generarS13Zip(draft, territoriosValidos, new Date(), yearOffset)
+      const result = await generarS13Pdf(draft, territoriosValidos, new Date(), yearOffset)
       descargarBlob(result.blob, result.filename)
     } catch (error) { console.error(error); setErrorS13('No se pudieron generar los S-13. Volvé a intentarlo.') }
     finally { setGenerando(false) }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
-import { generarS13Zip, descargarBlob } from './s13.js'
+import { generarS13Pdf, descargarBlob } from './s13.js'
 
 const FILTROS = [
   { key: 'todos', label: 'Todos' },
@@ -92,7 +92,7 @@ export default function AdminPanel({
     setGenerando(true)
     setErrorS13('')
     try {
-      const result = await generarS13Zip(filas, territoriosValidos, new Date(), yearOffset)
+      const result = await generarS13Pdf(filas, territoriosValidos, new Date(), yearOffset)
       descargarBlob(result.blob, result.filename)
     } catch (error) {
       console.error(error)

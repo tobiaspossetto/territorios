@@ -2,15 +2,15 @@ import { useState } from 'react'
 
 const DIAS = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO']
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`)
-const detalleVacio = () => ({ id: uid(), lugar: '', territorio: '', conductor: '' })
-const salidaVacia = () => ({ id: uid(), dia: 'SÁBADO', horario: '17:00', grupos: false, detalles: [detalleVacio()] })
+const detalleVacio = (grupo = '') => ({ id: uid(), grupo, lugar: '', territorio: '', conductor: '' })
+const salidaVacia = () => ({ id: uid(), dia: '', horario: '', grupos: false, detalles: [detalleVacio()] })
 
 function descargarPrograma(salidas) {
   const rows = salidas.flatMap((salida) => salida.detalles.map((detalle, index) => ({
     ...detalle,
     dia: salida.dia,
     horario: salida.horario,
-    grupo: salida.grupos ? `G${index + 1}` : '',
+    grupo: salida.grupos ? detalle.grupo : '',
   })))
   if (!rows.length) return
 
@@ -53,16 +53,17 @@ function descargarPrograma(salidas) {
     ctx.beginPath(); ctx.moveTo(margin, y + rowH); ctx.lineTo(width - margin, y + rowH); ctx.stroke()
 
     ctx.textAlign = 'left'; ctx.fillStyle = '#17171b'; ctx.font = '800 28px Arial, sans-serif'
-    ctx.fillText(row.dia, x[0] + 22, y + 43)
+    ctx.fillText(row.dia || '', x[0] + 22, y + 43)
     ctx.font = '400 25px Arial, sans-serif'
-    ctx.fillText(`${row.horario || '—'} hs${row.grupo ? ` · ${row.grupo}` : ''}`, x[0] + 22, y + 84)
+    const horarioGrupo = [row.horario ? `${row.horario} hs` : '', row.grupo].filter(Boolean).join(' · ')
+    ctx.fillText(horarioGrupo, x[0] + 22, y + 84)
 
     const values = [row.lugar, row.territorio, row.conductor]
     values.forEach((value, i) => {
       const left = x[i + 1], right = x[i + 2]
       ctx.textAlign = 'center'; ctx.fillStyle = '#17171b'
       ctx.font = `500 ${fit(value, right - left - 28)}px Arial, sans-serif`
-      ctx.fillText(value || '—', (left + right) / 2, y + rowH / 2)
+      ctx.fillText(value || '', (left + right) / 2, y + rowH / 2)
     })
   })
 
@@ -81,7 +82,7 @@ export default function ProgramGenerator() {
   const patchDetalle = (salidaId, detalleId, patch) => setSalidas((all) => all.map((s) => s.id !== salidaId ? s : {
     ...s, detalles: s.detalles.map((d) => d.id === detalleId ? { ...d, ...patch } : d),
   }))
-  const addGrupo = (id) => setSalidas((all) => all.map((s) => s.id === id ? { ...s, detalles: [...s.detalles, detalleVacio()] } : s))
+  const addGrupo = (id) => setSalidas((all) => all.map((s) => s.id === id ? { ...s, detalles: [...s.detalles, detalleVacio(`G${s.detalles.length + 1}`)] } : s))
   const removeDetalle = (salidaId, detalleId) => setSalidas((all) => all.map((s) => s.id !== salidaId ? s : {
     ...s, detalles: s.detalles.filter((d) => d.id !== detalleId),
   }))
@@ -100,16 +101,20 @@ export default function ProgramGenerator() {
               <button className="admin-mini-btn ghost danger" onClick={() => setSalidas((all) => all.filter((s) => s.id !== salida.id))}>Quitar</button>
             </div>
             <div className="programa-main-fields">
-              <label>Día<select value={salida.dia} onChange={(e) => patchSalida(salida.id, { dia: e.target.value })}>{DIAS.map((d) => <option key={d}>{d}</option>)}</select></label>
+              <label>Día<select value={salida.dia} onChange={(e) => patchSalida(salida.id, { dia: e.target.value })}><option value="">Sin especificar</option>{DIAS.map((d) => <option key={d}>{d}</option>)}</select></label>
               <label>Horario<input type="time" value={salida.horario} onChange={(e) => patchSalida(salida.id, { horario: e.target.value })} /></label>
               <label className="programa-check"><input type="checkbox" checked={salida.grupos} onChange={(e) => patchSalida(salida.id, {
                 grupos: e.target.checked,
-                detalles: e.target.checked ? salida.detalles : salida.detalles.slice(0, 1),
+                detalles: e.target.checked
+                  ? salida.detalles.map((d, i) => ({ ...d, grupo: d.grupo || `G${i + 1}` }))
+                  : salida.detalles.slice(0, 1),
               })} />Salida por grupos</label>
             </div>
             {salida.detalles.map((detalle, index) => (
               <div className="programa-detail" key={detalle.id}>
-                <b>{salida.grupos ? `G${index + 1}` : 'Datos'}</b>
+                {salida.grupos
+                  ? <input className="programa-grupo" placeholder="Grupo" value={detalle.grupo} onChange={(e) => patchDetalle(salida.id, detalle.id, { grupo: e.target.value })} />
+                  : <b>Datos</b>}
                 <input placeholder="Lugar" value={detalle.lugar} onChange={(e) => patchDetalle(salida.id, detalle.id, { lugar: e.target.value })} />
                 <input placeholder="Territorio" value={detalle.territorio} onChange={(e) => patchDetalle(salida.id, detalle.id, { territorio: e.target.value.toUpperCase() })} />
                 <input placeholder="Conductor" value={detalle.conductor} onChange={(e) => patchDetalle(salida.id, detalle.id, { conductor: e.target.value })} />

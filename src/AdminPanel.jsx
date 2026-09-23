@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { todayISO } from './adminData.js'
 import { IconLogout, IconSearch, IconExpand, IconCollapse } from './icons.jsx'
 import { generarS13Zip, descargarBlob } from './s13.js'
 
@@ -8,6 +7,8 @@ const FILTROS = [
   { key: 'completado', label: 'Completado' },
   { key: 'activo', label: 'Activo' },
 ]
+
+const todayISO = () => new Date().toISOString().slice(0, 10)
 
 export default function AdminPanel({
   data, registroBase, onAdd, onUpdate, onDelete, onLogout, onClose,

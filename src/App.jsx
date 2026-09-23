@@ -12,7 +12,7 @@ import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, Ico
 import AdminLogin from './AdminLogin.jsx'
 import AdminPanel from './AdminPanel.jsx'
 import {
-  addRecord, applyPublicSummaries, importLegacyIfNeeded, isBootstrapAdmin,
+  addRecord, applyPublicSummaries, isBootstrapAdmin,
   logoutFirebase, observeAuth, removeRecord, setCampaignMode,
   subscribePublicState, subscribeRecords, updateRecord,
 } from './firebaseData.js'
@@ -182,7 +182,6 @@ export default function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [adminInitialQuery, setAdminInitialQuery] = useState('')
   const [registroBase, setRegistroBase] = useState([])
-  const [legacyRows, setLegacyRows] = useState([])
   const [publicSummaries, setPublicSummaries] = useState({})
   const [adminSyncError, setAdminSyncError] = useState('')
   const mapRef = useRef(null)
@@ -214,7 +213,6 @@ export default function App() {
   const ready = useRef({ data: false, map: false, time: false, done: false })
   const deepLinkDone = useRef(false)
   const publicConfigLoaded = useRef(false)
-  const importStarted = useRef(false)
 
   const hideSplash = useCallback(() => {
     const r = ready.current
@@ -237,9 +235,6 @@ export default function App() {
     ]).then(([t, m]) => { setTerr(t); setManz(m); ready.current.data = true; hideSplash() })
       .catch(console.error)
     fetch('meta.json').then(r => r.json()).then(setMeta).catch(() => {})
-    // Fuente temporal para la migración inicial. Se quitará del Hosting cuando
-    // Firestore confirme la importación completa.
-    fetch('registro.json').then(r => r.ok ? r.json() : []).then(setLegacyRows).catch(() => {})
   }, [hideSplash])
 
   useEffect(() => observeAuth((user) => {
@@ -265,16 +260,6 @@ export default function App() {
       setAdminSyncError('No se pudieron sincronizar los registros privados.')
     })
   }, [adminUser])
-
-  useEffect(() => {
-    if (!adminUser || !legacyRows.length || importStarted.current) return
-    importStarted.current = true
-    importLegacyIfNeeded(legacyRows, true).catch((error) => {
-      console.error(error)
-      importStarted.current = false
-      setAdminSyncError('No se pudo completar la importación inicial.')
-    })
-  }, [adminUser, legacyRows])
 
   useEffect(() => {
     const r = () => mapRef.current && mapRef.current.resize()

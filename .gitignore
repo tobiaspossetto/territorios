@@ -5,8 +5,9 @@ dist
 .DS_Store
 *.log
 
-# PoC local de modo admin: registro completo (privado), nunca se sube
+# Respaldo histórico privado: nunca se publica ni se sube
 public/registro.json
+private/
 
 # Capturas generadas localmente (el script sí se versiona)
 scripts/salida/

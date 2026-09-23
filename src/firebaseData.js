@@ -3,8 +3,8 @@ import {
   signInWithPopup, signOut,
 } from 'firebase/auth'
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot,
-  orderBy, query, setDoc, updateDoc, where, writeBatch,
+  addDoc, collection, deleteDoc, doc, getDocs, onSnapshot,
+  orderBy, query, setDoc, updateDoc, where,
 } from 'firebase/firestore'
 import { firebaseAuth, firestore } from './firebase.js'
 
@@ -15,7 +15,7 @@ function assertFirebase() {
 }
 
 export function observeAuth(callback) {
-  assertFirebase()
+  if (!firebaseAuth) { callback(null); return () => {} }
   return onAuthStateChanged(firebaseAuth, callback)
 }
 
@@ -47,7 +47,7 @@ export function subscribeRecords(onData, onError) {
 }
 
 export function subscribePublicState(onData, onError) {
-  assertFirebase()
+  if (!firestore) { onData({ summaries: {}, campaignMode: false }); return () => {} }
   let summaries = {}
   let campaignMode = false
   const emit = () => onData({ summaries, campaignMode })
@@ -109,38 +109,6 @@ export async function removeRecord(record) {
 export async function setCampaignMode(campaignMode) {
   assertFirebase()
   await setDoc(doc(firestore, 'config', 'public'), { campaignMode, updatedAt: Date.now() }, { merge: true })
-}
-
-export async function importLegacyIfNeeded(rows, campaignMode = true) {
-  assertFirebase()
-  const markerRef = doc(firestore, 'migrations', 'legacy-v1')
-  const marker = await getDoc(markerRef)
-  if (marker.exists()) return { imported: 0, alreadyDone: true }
-
-  for (let start = 0; start < rows.length; start += 350) {
-    const batch = writeBatch(firestore)
-    rows.slice(start, start + 350).forEach((r, offset) => {
-      const i = start + offset
-      batch.set(doc(firestore, 'registros', `legacy-${String(i).padStart(4, '0')}`), {
-        territorio: r.territorio,
-        inicio: r.inicio,
-        fin: r.fin || null,
-        campania: !!r.campania,
-        createdOrder: i,
-        updatedAt: Date.now(),
-        source: 'excel-inicial',
-      })
-    })
-    await batch.commit()
-  }
-
-  const territorios = [...new Set(rows.map((r) => r.territorio))]
-  for (const territorio of territorios) await recomputeTerritory(territorio)
-  await setDoc(doc(firestore, 'config', 'public'), { campaignMode, updatedAt: Date.now() }, { merge: true })
-  await setDoc(markerRef, {
-    name: 'legacy-v1', imported: rows.length, completedAt: Date.now(),
-  })
-  return { imported: rows.length, alreadyDone: false }
 }
 
 export function applyPublicSummaries(fc, summaries) {

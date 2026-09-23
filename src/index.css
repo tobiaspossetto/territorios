@@ -4,14 +4,15 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
-  background: #f4f4f3;
+  background: #000;
 }
 
-/* paleta única clara inspirada en la referencia: naranja, azul, carbón y gris */
+/* Paleta inspirada en JW Hub: negro, carbón, naranja y azul suave. El mapa
+   permanece claro para que los polígonos y la métrica no se confundan. */
 .app {
   position: fixed; inset: 0;
-  --panel: rgba(255,255,255,.96); --stroke: rgba(55,51,50,.18);
-  --txt: #373332; --muted: #777371; --accent: #ed7100; --accent2: #3f6fae; --track: #f0f0ef;
+  --panel: rgba(35,33,33,.97); --stroke: rgba(255,255,255,.20);
+  --txt: #f2efed; --muted: #b7b1ae; --accent: #ed7100; --accent2: #8aaddb; --track: #343130;
 }
 
 /* footer nav para ver más elementos del sistema no se pisa */
@@ -52,6 +53,9 @@ body {
 }
 .maplibregl-ctrl-group button { background: transparent !important; }
 .maplibregl-ctrl-group button + button { border-top: 1px solid var(--stroke) !important; }
+.maplibregl-ctrl-icon { filter: invert(1) brightness(1.35); }
+.maplibregl-ctrl-attrib { color: var(--txt); background: var(--panel) !important; }
+.maplibregl-ctrl-attrib a { color: var(--accent2); }
 
 /* footer menú Mapa / Métrica */
 .footer {
@@ -227,12 +231,12 @@ body {
 /* splash / pantalla de bienvenida-carga */
 .splash {
   position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
-  background: #f4f4f3; transition: opacity .5s ease;
+  background: #000; transition: opacity .5s ease;
 }
 .splash.out { opacity: 0; pointer-events: none; }
-.splash-inner { text-align: center; animation: splashIn .7s cubic-bezier(.2,.7,.2,1) both; color: #777371; }
+.splash-inner { text-align: center; animation: splashIn .7s cubic-bezier(.2,.7,.2,1) both; color: #b7b1ae; }
 .splash-mark { width: min(52vw, 210px); height: auto; display: block; margin: 0 auto 16px; }
-.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; color: #373332; }
+.splash-title { font-weight: 800; letter-spacing: .14em; font-size: clamp(24px, 7.4vw, 46px); line-height: 1; color: #f2efed; }
 .splash-sub { letter-spacing: .32em; font-size: clamp(11px, 3.2vw, 15px); margin-top: 8px; }
 @keyframes splashIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .splash-inner { animation: none; } .splash { transition: none; } }
@@ -240,9 +244,9 @@ body {
 /* aviso sin key */
 .nokey {
   position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center;
-  gap: 10px; padding: 28px; background: #f4f4f3; color: #373332; font-size: 15px; line-height: 1.5;
+  gap: 10px; padding: 28px; background: #000; color: #f2efed; font-size: 15px; line-height: 1.5;
 }
-.nokey code { background: rgba(55,51,50,.08); padding: 2px 6px; border-radius: 6px; }
+.nokey code { background: rgba(255,255,255,.10); padding: 2px 6px; border-radius: 6px; }
 
 @media (min-width: 721px) {
   .footer {
@@ -258,7 +262,7 @@ body {
   .toast { bottom: 96px; }
 }
 
-/* ===== Modo admin (PoC local) ===== */
+/* ===== Modo administrador Firebase ===== */
 
 /* disparador discreto, esquina inferior-der, mismo nivel que el buscador */
 .admin-fab {
@@ -268,7 +272,7 @@ body {
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0,0,0,.2);
 }
-.admin-fab.on { opacity: 1; color: #fff; background: #ed7100; border-color: transparent; }
+.admin-fab.on { opacity: 1; color: #fff; background: var(--accent); border-color: transparent; }
 .admin-fab svg { width: 18px; height: 18px; }
 
 /* login */
@@ -283,7 +287,7 @@ body {
   display: flex; flex-direction: column; gap: 10px;
 }
 .admin-card-icon {
-  width: 42px; height: 42px; border-radius: 12px; background: rgba(79,143,214,.16); color: var(--accent2);
+  width: 42px; height: 42px; border-radius: 8px; background: rgba(138,173,219,.16); color: var(--accent2);
   display: flex; align-items: center; justify-content: center; margin-bottom: 2px;
 }
 .admin-card h2 { margin: 0; font-size: 18px; }
@@ -341,7 +345,7 @@ body {
   flex: none; width: 46px; height: 28px; border-radius: 20px; border: 0; cursor: pointer;
   background: rgba(128,140,170,.35); padding: 3px; display: flex; align-items: center;
 }
-.admin-switch.on { background: #3f6fae; justify-content: flex-end; }
+.admin-switch.on { background: var(--accent2); justify-content: flex-end; }
 .admin-switch-knob { width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .admin-search {
   display: flex; align-items: center; gap: 8px; margin: 10px 16px; padding: 0 12px; min-height: 46px;
@@ -357,7 +361,7 @@ body {
   min-height: 30px; padding: 0 11px; border-radius: 20px; border: 1px solid var(--stroke);
   background: transparent; color: var(--muted); font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
 }
-.admin-filtro-btn.on { color: #fff; background: #3f6fae; border-color: transparent; }
+.admin-filtro-btn.on { color: #111; background: var(--accent2); border-color: transparent; }
 .admin-list { overflow-y: auto; padding: 0 16px 10px; display: flex; flex-direction: column; gap: 8px; }
 .admin-row { border: 1px solid var(--stroke); border-radius: 14px; padding: 10px 12px; background: rgba(128,140,170,.06); }
 .admin-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -388,11 +392,11 @@ body {
   color: var(--txt); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-.admin-foot-btn.danger { color: #b71c1c; }
+.admin-foot-btn.danger { color: #ff8585; }
 .admin-foot-btn.primary { color: #fff; background: #ed7100; border-color: #ed7100; }
 .admin-foot-btn:disabled { opacity: .55; cursor: wait; }
 .admin-foot-btn svg { width: 16px; height: 16px; }
-.admin-export-error { padding: 0 16px calc(10px + env(safe-area-inset-bottom)); color: #b71c1c; font-size: 11.5px; }
+.admin-export-error { padding: 0 16px calc(10px + env(safe-area-inset-bottom)); color: #ff8585; font-size: 11.5px; }
 
 /* tabla plana de registro, tipo Excel (Territorio | Inicio | Fin | Campaña) */
 .admin-add-row { margin-left: auto; display: flex; gap: 6px; align-items: center; }

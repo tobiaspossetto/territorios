@@ -16,7 +16,7 @@ export default defineConfig({
         short_name: 'Territorios',
         description: 'Mapa de territorios de predicación',
         theme_color: '#ed7100',
-        background_color: '#f4f4f3',
+        background_color: '#000000',
         display: 'standalone',
         start_url: './',
         scope: './',

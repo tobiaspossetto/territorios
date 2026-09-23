@@ -1,6 +1,7 @@
 # Configuración de Firebase
 
-La integración está preparada pero no reemplaza todavía la PoC local.
+Firebase es la fuente oficial del modo administrador. El mapa público consume
+únicamente resúmenes agregados; el historial completo requiere autenticación.
 
 ## Consola de Firebase
 
@@ -23,12 +24,11 @@ En Firestore crear:
 Las reglas incluidas niegan por defecto todo acceso. Solo un usuario autenticado
 con un documento activo en `admins` puede leer o modificar `registros` y `config`.
 
-## Siguiente etapa
+## Datos
 
-Con la conexión verificada se reemplazarán, por separado:
+- `registros`: historial privado editable por administradores.
+- `territoriosPublicos`: resumen agregado que utiliza el mapa público.
+- `config/public`: estado público del modo campaña.
+- `admins`: permisos adicionales de administración.
 
-1. Login local por Firebase Authentication.
-2. `registro.json` y `localStorage` por la colección privada `registros`.
-3. Estado local de campaña por el documento `config/app`.
-
-Hasta entonces, la app continúa usando el flujo local actual.
+El respaldo inicial permanece fuera de `public/` y nunca se copia al build.

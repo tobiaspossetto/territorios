@@ -138,38 +138,10 @@
 .app-v2 .guide-section li { position: relative; padding-left: 14px; }
 .app-v2 .guide-section li::before { content: ''; position: absolute; left: 1px; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-orange); }
 .app-v2 .guide-section li b { color: var(--txt); }
-.app-v2 .guide-preview { position: relative; height: 138px; overflow: hidden; border: 1px solid var(--stroke); border-radius: 14px; background: var(--track); }
-.app-v2 .guide-map-preview,
-.app-v2 .guide-campaign-preview {
-  background-color: #e7e9e8;
-  background-image: linear-gradient(29deg, transparent 46%, rgba(255,255,255,.8) 47% 51%, transparent 52%), linear-gradient(97deg, transparent 46%, rgba(255,255,255,.72) 47% 51%, transparent 52%);
-  background-size: 90px 70px, 110px 84px;
+.app-v2 .guide-preview {
+  display: block; width: 100%; height: auto; border: 1px solid var(--stroke); border-radius: 14px;
+  background: #fffdfa; object-fit: contain;
 }
-.app-v2 .guide-block { position: absolute; display: grid; place-items: center; border: 2px solid #777; background: rgba(180,183,181,.52); color: #34312f; font-size: 12px; font-weight: 800; clip-path: polygon(8% 5%, 90% 0, 100% 75%, 72% 100%, 0 83%); }
-.app-v2 .guide-block.b1 { left: 5%; top: 13%; width: 29%; height: 69%; transform: rotate(-4deg); }
-.app-v2 .guide-block.b2 { left: 30%; top: 5%; width: 34%; height: 79%; transform: rotate(3deg); }
-.app-v2 .guide-block.b3 { left: 58%; top: 16%; width: 31%; height: 68%; transform: rotate(-2deg); }
-.app-v2 .guide-block.selected,
-.app-v2 .guide-block.active { border-color: #d86600; background: rgba(237,113,0,.34); }
-.app-v2 .guide-block.done { border-color: #23894d; background: rgba(46,158,91,.34); }
-.app-v2 .guide-mini-card { position: absolute; top: 13px; right: 12px; width: 146px; display: grid; gap: 3px; padding: 10px 11px; border: 1px solid rgba(49,43,39,.13); border-radius: 10px; background: rgba(255,253,250,.95); color: #242120; box-shadow: 0 6px 18px rgba(32,29,27,.15); }
-.app-v2 .guide-mini-card b { font-size: 14px; }
-.app-v2 .guide-mini-card span { display: flex; align-items: center; gap: 5px; color: #9a4500; font-size: 9px; font-weight: 800; }
-.app-v2 .guide-mini-card span i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange); }
-.app-v2 .guide-mini-card small { color: #746d68; font-size: 8px; }
-.app-v2 .guide-mini-legend { position: absolute; top: 10px; right: 10px; display: grid; gap: 5px; padding: 8px 9px; border-radius: 9px; background: rgba(255,253,250,.94); color: #423d39; font-size: 8px; font-weight: 800; box-shadow: 0 5px 14px rgba(32,29,27,.12); }
-.app-v2 .guide-mini-legend span { display: flex; align-items: center; gap: 5px; }
-.app-v2 .guide-mini-legend i { width: 7px; height: 7px; border-radius: 50%; }
-.app-v2 .guide-mini-legend i.active { background: var(--brand-orange); }
-.app-v2 .guide-mini-legend i.done { background: var(--success); }
-.app-v2 .guide-metric-preview { display: grid; grid-template-columns: 1fr 1.15fr; gap: 18px; padding: 16px 18px; background: color-mix(in srgb, var(--track) 82%, var(--panel)); }
-.app-v2 .guide-bars { display: flex; align-items: end; justify-content: space-around; gap: 7px; padding-top: 8px; border-bottom: 1px solid var(--stroke); }
-.app-v2 .guide-bars i { flex: 1; max-width: 25px; min-height: 8px; border-radius: 5px 5px 0 0; background: var(--success); }
-.app-v2 .guide-bars i:nth-child(1), .app-v2 .guide-bars i:nth-child(4) { background: var(--brand-orange); }
-.app-v2 .guide-zones { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-.app-v2 .guide-zones span { display: grid; grid-template-columns: 73px 1fr; align-items: center; color: var(--muted); font-size: 8px; }
-.app-v2 .guide-zones span > i { height: 6px; overflow: hidden; border-radius: 99px; background: var(--stroke); }
-.app-v2 .guide-zones span b { display: block; height: 100%; border-radius: inherit; background: var(--brand-orange); }
 
 .app-v2 .search-fab {
   background: var(--panel); color: var(--txt); border-color: var(--stroke);
@@ -371,12 +343,8 @@
   .app-v2 .guide-section-title { margin-bottom: 8px; }
   .app-v2 .guide-section-title h3 { font-size: 15px; }
   .app-v2 .guide-section-title svg { width: 19px; height: 19px; }
-  .app-v2 .guide-preview { height: 122px; border-radius: 12px; }
+  .app-v2 .guide-preview { height: auto; border-radius: 12px; }
   .app-v2 .guide-section ul { margin-top: 9px; gap: 4px; font-size: 10.5px; }
-  .app-v2 .guide-mini-card { top: 10px; right: 9px; width: 132px; padding: 8px 9px; }
-  .app-v2 .guide-mini-card b { font-size: 12px; }
-  .app-v2 .guide-metric-preview { gap: 12px; padding: 13px 12px; }
-  .app-v2 .guide-zones span { grid-template-columns: 64px 1fr; font-size: 7.5px; }
 
   .app-v2 .search-fab {
     left: 8px; bottom: calc(44px + env(safe-area-inset-bottom)); min-height: 40px;

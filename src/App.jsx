@@ -13,7 +13,7 @@ import AdminLogin from './AdminLogin.jsx'
 import AdminPanel from './AdminPanelV2.jsx'
 import {
   applyPublicSummaries, ensurePublicMapSummary, isAuthorizedAdmin, logoutFirebase, observeAuth,
-  saveRecordChanges, setCampaignMode, subscribePublicState, subscribeRecords,
+  saveRecordChanges, setCampaignMode, setMetricsVisible, subscribePublicState, subscribeRecords,
 } from './firebaseData.js'
 
 // protocolo pmtiles (para el mapa base offline). Se registra una sola vez.
@@ -169,6 +169,7 @@ export default function App() {
     } catch { return 'light' }
   })
   const [campModoOn, setCampModoOn] = useState(false)
+  const [metricsVisible, setMetricsVisibleState] = useState(true)
   const [mode, setMode] = useState('mapa') // 'mapa' | 'metrica' | 'campana'
   const [terr, setTerr] = useState(null)
   const [manz, setManz] = useState(null)
@@ -284,15 +285,16 @@ export default function App() {
     })
   }, [])
 
-  useEffect(() => subscribePublicState(({ summaries, campaignMode }) => {
+  useEffect(() => subscribePublicState(({ summaries, campaignMode, metricsVisible: showMetrics }) => {
     setPublicSummaries(summaries)
     setCampModoOn(campaignMode)
+    setMetricsVisibleState(showMetrics)
     setPublicConfigReady(true)
     if (!publicConfigLoaded.current) {
       publicConfigLoaded.current = true
       setMode(campaignMode ? 'campana' : 'mapa')
-    } else if (!campaignMode) {
-      setMode((m) => (m === 'campana' ? 'mapa' : m))
+    } else {
+      setMode((m) => ((m === 'campana' && !campaignMode) || (m === 'metrica' && !showMetrics) ? 'mapa' : m))
     }
   }, (error) => console.error('Firebase público:', error)), [])
 
@@ -306,10 +308,6 @@ export default function App() {
       setAdminSyncError('No se pudieron sincronizar los registros privados.')
     })
   }, [adminUser])
-
-  useEffect(() => {
-    if (!adminOn && mode === 'metrica') setMode('mapa')
-  }, [adminOn, mode])
 
   useEffect(() => {
     const r = () => mapRef.current && mapRef.current.resize()
@@ -800,7 +798,7 @@ export default function App() {
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
           <IconMap /><span>Mapa</span>
         </button>
-        {adminOn && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
+        {metricsVisible && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
           <IconChart /><span>Métrica</span>
         </button>}
         <button className={showAdminPanel ? 'on' : ''} onClick={() => (adminOn ? setShowAdminPanel(true) : setShowLogin(true))}>
@@ -825,6 +823,8 @@ export default function App() {
           onLogout={async () => { await logoutFirebase(); setAdminUser(null); setShowAdminPanel(false) }}
           campModoOn={campModoOn}
           onCampModoChange={setCampaignMode}
+          metricsVisible={metricsVisible}
+          onMetricsVisibleChange={setMetricsVisible}
           initialQuery={adminInitialQuery}
           syncError={adminSyncError}
           currentEmail={adminUser.email || ''}

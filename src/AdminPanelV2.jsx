@@ -22,7 +22,8 @@ const isTemp = (id) => String(id).startsWith('nuevo-')
 
 export default function AdminPanel({
   data, manzanas, registroBase, onSave, onLogout, onClose,
-  onCampModoChange, campModoOn, initialQuery, syncError, currentEmail, theme, onThemeToggle,
+  onCampModoChange, campModoOn, metricsVisible, onMetricsVisibleChange,
+  initialQuery, syncError, currentEmail, theme, onThemeToggle,
 }) {
   const [view, setView] = useState('registros')
   const [q, setQ] = useState(initialQuery || '')
@@ -175,9 +176,15 @@ export default function AdminPanel({
 
         {view === 'programa' ? <ProgramGenerator /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} /> : <>
           <div className="admin-record-tools">
-            <div className="admin-campmode">
-              <div><div className="admin-campmode-label">Modo campaña</div><div className="admin-campmode-sub">{campModoOn ? 'Activo: se puede marcar la columna Campaña.' : 'Apagado: la columna Campaña está bloqueada.'}</div></div>
-              <button className={'admin-switch' + (campModoOn ? ' on' : '')} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>
+            <div className="admin-public-settings">
+              <div className="admin-campmode">
+                <div><div className="admin-campmode-label">Modo campaña</div><div className="admin-campmode-sub">{campModoOn ? 'Visible y editable.' : 'Oculto para todos.'}</div></div>
+                <button className={'admin-switch' + (campModoOn ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-label="Mostrar modo campaña" aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>
+              </div>
+              <div className="admin-campmode">
+                <div><div className="admin-campmode-label">Mostrar Métrica</div><div className="admin-campmode-sub">{metricsVisible ? 'Visible para todos.' : 'Oculta para todos.'}</div></div>
+                <button className={'admin-switch' + (metricsVisible ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onMetricsVisibleChange(!metricsVisible))} aria-label="Mostrar Métrica para todos" aria-pressed={metricsVisible}><span className="admin-switch-knob" /></button>
+              </div>
             </div>
             <div className="admin-search"><IconSearch /><input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Filtrar por N° de territorio" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           </div>

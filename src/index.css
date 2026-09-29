@@ -370,6 +370,8 @@ body {
   width: calc(100% - 32px); max-width: 960px; margin: 12px auto 0; padding: 10px 12px; border: 1px solid var(--stroke); border-radius: 12px;
   background: rgba(128,140,170,.08);
 }
+.admin-public-settings { display: grid; gap: 8px; }
+.admin-public-settings .admin-campmode { width: auto; max-width: none; margin: 0; }
 .admin-campmode-label { font-size: 13px; font-weight: 700; }
 .admin-campmode-sub { font-size: 11px; color: var(--muted); margin-top: 2px; max-width: 260px; }
 .admin-switch {
@@ -612,7 +614,8 @@ body {
   .desktop-label { display: none; }
   .mobile-label { display: inline; }
 
-  .admin-campmode { margin: 6px 8px 0; padding: 6px 8px; border-radius: 9px; }
+  .admin-public-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 6px 8px 0; }
+  .admin-campmode { margin: 0; padding: 6px 8px; border-radius: 9px; }
   .admin-campmode-label { font-size: 11px; }
   .admin-campmode-sub { display: none; }
   .admin-switch { width: 38px; height: 22px; padding: 3px; }
@@ -744,7 +747,7 @@ body {
 
   .admin-record-tools {
     width: calc(100% - 36px); max-width: 960px; margin: 14px auto 10px;
-    display: grid; grid-template-columns: 250px minmax(300px, 520px); gap: 10px; align-items: stretch;
+    display: grid; grid-template-columns: minmax(430px, 520px) minmax(300px, 420px); gap: 10px; align-items: stretch;
   }
   .admin-campmode, .admin-search { width: auto; max-width: none; margin: 0; }
   .admin-campmode { padding: 8px 11px; border-radius: 10px; }

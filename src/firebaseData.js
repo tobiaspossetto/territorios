@@ -90,16 +90,20 @@ export function subscribeRecords(onData, onError) {
 }
 
 export function subscribePublicState(onData, onError) {
-  if (!firestore) { onData({ summaries: {}, campaignMode: false }); return () => {} }
+  if (!firestore) { onData({ summaries: {}, campaignMode: false, metricsVisible: true }); return () => {} }
   let summaries = {}
   let campaignMode = false
-  const emit = () => onData({ summaries, campaignMode })
+  let metricsVisible = true
+  const emit = () => onData({ summaries, campaignMode, metricsVisible })
   const stopTerr = onSnapshot(collection(firestore, 'territoriosPublicos'), (snap) => {
     summaries = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]))
     emit()
   }, onError)
   const stopConfig = onSnapshot(doc(firestore, 'config', 'public'), (snap) => {
     campaignMode = snap.exists() && snap.data().campaignMode === true
+    // Por compatibilidad, las instalaciones que todavía no tengan este campo
+    // mantienen la Métrica visible para todos.
+    metricsVisible = !snap.exists() || snap.data().metricsVisible !== false
     emit()
   }, onError)
   return () => { stopTerr(); stopConfig() }
@@ -220,6 +224,11 @@ export async function saveRecordChanges({ created = [], updated = [], deleted = 
 export async function setCampaignMode(campaignMode) {
   assertFirebase()
   await setDoc(doc(firestore, 'config', 'public'), { campaignMode, updatedAt: Date.now() }, { merge: true })
+}
+
+export async function setMetricsVisible(metricsVisible) {
+  assertFirebase()
+  await setDoc(doc(firestore, 'config', 'public'), { metricsVisible, updatedAt: Date.now() }, { merge: true })
 }
 
 // Borrador privado y compartido del generador de programa.

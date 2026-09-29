@@ -800,7 +800,8 @@ export default function App() {
           </div>
           <span className={`info-status${popup.activo ? ' active' : ''}`}><i />Activo</span>
           <div className="info-summary">
-            <div><span>Completado</span><b>{popup.veces || 0} {popup.veces === 1 ? 'vez' : 'veces'}</b></div>
+            <div><span>Año de servicio</span><b>{popup.veces_servicio || 0} {(popup.veces_servicio || 0) === 1 ? 'vez' : 'veces'}</b></div>
+            <div><span>Total histórico</span><b>{popup.veces || 0} {popup.veces === 1 ? 'vez' : 'veces'}</b></div>
             <div><span>Última visita</span><b>{popup.ultima_fmt || 'Sin registro'}</b></div>
             {popup.dias_desde != null && <div><span>Antigüedad</span><b>{popup.dias_desde} días</b></div>}
           </div>

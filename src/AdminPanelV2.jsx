@@ -151,7 +151,10 @@ export default function AdminPanel({
         <div className="admin-panel-head">
           <div className="admin-panel-grip" />
           <div className="admin-panel-hrow">
-            <span className="admin-panel-title">Administración</span>
+            <div className="admin-panel-brand">
+              <span className="admin-panel-mark"><img src="logo-furgon.png" alt="" /></span>
+              <span><strong className="admin-panel-title">Administración</strong><small>Gestión y organización</small></span>
+            </div>
             <div className="admin-panel-hbtns">
               {view === 'registros' && <div className="admin-head-export">
                 <button className="search-x" onClick={() => setExportOpen((v) => !v)} aria-label="Exportar" aria-expanded={exportOpen}>⋯</button>

@@ -1055,3 +1055,88 @@ body {
   }
   .admin-panel-sub { margin: 6px 12px 0; padding: 0; }
 }
+
+/* Ajuste de densidad basado en los mockups finales. */
+.admin-panel-brand { min-width: 0; display: flex; align-items: center; gap: 10px; }
+.admin-panel-brand > span:last-child { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.admin-panel-brand small { color: var(--muted); font-size: 9.5px; line-height: 1; }
+.admin-panel-mark {
+  width: 36px; height: 36px; flex: none; display: grid; place-items: center;
+  border: 1px solid rgba(237,113,0,.28); border-radius: 10px; background: rgba(237,113,0,.09);
+}
+.admin-panel-mark img { width: 27px; height: 27px; object-fit: contain; }
+
+@media (min-width: 721px) {
+  .admin-panel-head { min-height: 68px; box-sizing: border-box; padding: 13px 20px; }
+  .admin-panel-title { font-size: 19px; line-height: 1; }
+  .admin-panel-hbtns .search-x, .admin-head-save { min-height: 38px; height: 38px; }
+  .admin-panel-hbtns .search-x { width: 38px; }
+
+  .admin-record-tools {
+    display: grid !important; grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start; gap: 10px; margin-top: 12px;
+  }
+  .admin-campmode { min-height: 64px; padding: 10px 14px; }
+  .admin-search {
+    align-self: start; width: min(500px, 100%); height: 40px; min-height: 40px;
+    padding: 0 11px; border-radius: 10px;
+  }
+  .admin-search input { min-height: 38px; font-size: 13px; }
+  .admin-filtro-btn { min-height: 32px; padding: 0 13px; font-size: 11px; }
+  .admin-add-terr, .admin-add-row .admin-mini-btn { min-height: 32px; height: 32px; }
+
+  .admin-editor-card { padding: 13px 16px; }
+  .admin-accordion-grid { grid-template-columns: 140px 96px 190px 190px; gap: 12px; }
+  .admin-accordion-grid select, .admin-accordion-grid .admin-c-btn,
+  .admin-accordion-grid .aria-field-control { min-height: 36px; height: 36px; }
+  .aria-date-input { font-size: 12px; }
+  .aria-clear { flex-basis: 34px; }
+
+  .programa-card { padding: 13px 15px; }
+  .programa-main-fields { grid-template-columns: 210px 170px; }
+  .programa-main-fields select, .programa-main-fields input, .programa-detail input,
+  .programa-main-fields .aria-field-control { min-height: 36px; height: 36px; font-size: 12px; }
+  .programa-detail { grid-template-columns: 76px 1.2fr .72fr 1.1fr 28px; }
+  .admin-users-add input, .admin-users-add button { min-height: 38px; height: 38px; }
+}
+
+@media (max-width: 720px) {
+  .admin-panel-head { padding-top: calc(7px + env(safe-area-inset-top)); padding-bottom: 6px; }
+  .admin-panel-mark, .admin-panel-brand small { display: none; }
+  .admin-panel-title { font-size: 16px; }
+  .admin-panel-hbtns { gap: 5px; }
+  .admin-panel-hbtns .search-x { width: 34px; height: 34px; border-radius: 8px; font-size: 19px; }
+  .admin-head-save { min-height: 34px; height: 34px; padding: 0 8px; }
+  .admin-tabs { margin-top: 6px; }
+  .admin-tabs button { min-height: 34px; }
+
+  .admin-public-settings { gap: 6px; }
+  .admin-campmode { min-height: 48px; margin-top: 8px; padding: 7px 9px; }
+  .admin-search { min-height: 40px; height: 40px; margin-top: 8px; margin-bottom: 8px; }
+  .admin-search input { min-height: 38px; font-size: 16px; }
+  .admin-filtros { margin-bottom: 8px; gap: 5px; }
+  .admin-filtro-btn { min-height: 31px; padding: 0 11px; }
+  .admin-add-terr, .admin-add-row .admin-mini-btn { min-height: 31px; height: 31px; }
+
+  .admin-editor-card { padding: 11px 12px; margin-bottom: 9px; }
+  .admin-accordion-head { margin-bottom: 9px; }
+  .admin-accordion-grid { gap: 8px; }
+  .admin-accordion-grid select, .admin-accordion-grid .admin-c-btn,
+  .admin-accordion-grid .aria-field-control { min-height: 40px; height: 40px; font-size: 16px; }
+  .aria-date-input { font-size: 16px; }
+
+  .programa-intro { padding-top: 10px; }
+  .programa-list { gap: 9px; }
+  .programa-card { padding: 11px; }
+  .programa-card-head { margin-bottom: 9px; }
+  .programa-main-fields { gap: 8px; }
+  .programa-main-fields select, .programa-main-fields input, .programa-detail input,
+  .programa-main-fields .aria-field-control { min-height: 40px; height: 40px; font-size: 16px; }
+  .programa-detail { padding-top: 9px; gap: 6px; }
+  .programa-actions { padding-top: 3px; padding-bottom: calc(3px + env(safe-area-inset-bottom)); }
+  .programa-actions .admin-foot-btn { min-height: 34px; }
+
+  .admin-users-intro { padding-top: 10px; padding-bottom: 9px; }
+  .admin-users-add input, .admin-users-add button { min-height: 40px; height: 40px; font-size: 16px; }
+  .admin-user-row { min-height: 50px; }
+}

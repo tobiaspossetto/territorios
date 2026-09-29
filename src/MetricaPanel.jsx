@@ -69,7 +69,7 @@ export default function MetricaPanel({ data, meta, selected, onClearSelected }) 
               <span>{selected.zona}</span>
             </div>
             <span className={'mp-selected-status' + (selected.activo ? ' active' : '')}>
-              <i />{selected.activo ? 'Activo' : 'Disponible'}
+              <i />Activo
             </span>
           </div>
           <div className="mp-selected-stats">

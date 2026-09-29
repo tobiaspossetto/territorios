@@ -796,7 +796,7 @@ export default function App() {
             </div>
             <button className="info-close" onClick={clearTerr} aria-label="Cerrar">×</button>
           </div>
-          <span className={`info-status${popup.activo ? ' active' : ''}`}><i />{popup.activo ? 'Activo' : 'Disponible'}</span>
+          <span className={`info-status${popup.activo ? ' active' : ''}`}><i />Activo</span>
           <div className="info-summary">
             <div><span>Completado</span><b>{popup.veces || 0} {popup.veces === 1 ? 'vez' : 'veces'}</b></div>
             <div><span>Última visita</span><b>{popup.ultima_fmt || 'Sin registro'}</b></div>

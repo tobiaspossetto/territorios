@@ -374,6 +374,13 @@ body {
 .admin-public-settings .admin-campmode { width: auto; max-width: none; margin: 0; }
 .admin-campmode-label { font-size: 13px; font-weight: 700; }
 .admin-campmode-sub { font-size: 11px; color: var(--muted); margin-top: 2px; max-width: 260px; }
+.admin-campmode-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.admin-campaign-reset {
+  min-height: 28px; padding: 0 9px; border: 1px solid rgba(224,82,82,.42); border-radius: 8px;
+  background: transparent; color: #e05252; font: 700 10px/1 inherit; cursor: pointer;
+}
+.admin-campaign-reset:hover:not(:disabled) { background: rgba(224,82,82,.08); }
+.admin-campaign-reset:disabled { opacity: .38; cursor: default; }
 .admin-switch {
   flex: none; width: 46px; height: 28px; border-radius: 20px; border: 0; cursor: pointer;
   background: rgba(128,140,170,.35); padding: 3px; display: flex; align-items: center;
@@ -618,6 +625,8 @@ body {
   .admin-campmode { margin: 0; padding: 6px 8px; border-radius: 9px; }
   .admin-campmode-label { font-size: 11px; }
   .admin-campmode-sub { display: none; }
+  .admin-campmode-actions { gap: 5px; }
+  .admin-campaign-reset { min-height: 26px; padding: 0 6px; font-size: 9px; }
   .admin-switch { width: 38px; height: 22px; padding: 3px; }
   .admin-switch-knob { width: 16px; height: 16px; }
   .admin-search { margin: 6px 8px; min-height: 34px; padding: 0 8px; border-radius: 8px; }

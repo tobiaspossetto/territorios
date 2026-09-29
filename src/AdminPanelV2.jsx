@@ -118,6 +118,22 @@ export default function AdminPanel({
     if (ok) setDirty(false)
   }
 
+  const restablecerCampania = async () => {
+    if (dirty) {
+      setSaveError('Guardá o descartá los cambios pendientes antes de restablecer la campaña.')
+      return
+    }
+    if (!window.confirm('Se reiniciarán los datos del modo Campaña. Solo hacer esto para comenzar una nueva campaña')) return
+    const marcados = draft.filter((record) => record.campania)
+    if (!marcados.length) return
+    const updated = marcados.map((record) => ({
+      record: { ...record, campania: false },
+      previousTerritorio: record.territorio,
+    }))
+    const ok = await runRemote(() => onSave({ created: [], updated, deleted: [] }))
+    if (ok) setDraft((rows) => rows.map((record) => record.campania ? { ...record, campania: false } : record))
+  }
+
   const pedirCierre = () => {
     if (dirty && !window.confirm('Hay cambios sin guardar. ¿Cerrar y descartarlos?')) return
     onClose()
@@ -186,7 +202,10 @@ export default function AdminPanel({
             <div className="admin-public-settings">
               <div className="admin-campmode">
                 <div><div className="admin-campmode-label">Modo campaña</div><div className="admin-campmode-sub">{campModoOn ? 'Visible y editable.' : 'Oculto para todos.'}</div></div>
-                <button className={'admin-switch' + (campModoOn ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-label="Mostrar modo campaña" aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>
+                <div className="admin-campmode-actions">
+                  <button className="admin-campaign-reset" disabled={saving || dirty || !draft.some((record) => record.campania)} onClick={restablecerCampania} title={dirty ? 'Guardá los cambios pendientes primero' : 'Quitar todas las marcas C'}>Restablecer</button>
+                  <button className={'admin-switch' + (campModoOn ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-label="Mostrar modo campaña" aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>
+                </div>
               </div>
               <div className="admin-campmode">
                 <div><div className="admin-campmode-label">Métrica pública</div><div className="admin-campmode-sub">{metricsVisible ? 'Visible sin iniciar sesión.' : 'Solo visible para administradores.'}</div></div>

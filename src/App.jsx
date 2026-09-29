@@ -412,6 +412,12 @@ export default function App() {
     setSelected(null); setPopup(null); setTachadas(null); setUrlTerr(null)
   }, [])
 
+  // Métrica es una vista global: nunca debe convivir con la ficha ni con el
+  // estado de un territorio, incluso si la selección llegó tarde por deep-link.
+  useEffect(() => {
+    if (mode === 'metrica' && (selected || popup)) clearTerr()
+  }, [mode, selected, popup, clearTerr])
+
   const onClick = useCallback((e) => {
     const f = e.features && e.features[0]
     if (!f) { clearTerr(); return }
@@ -787,7 +793,7 @@ export default function App() {
 
       {geoError && <div className="toast">{geoError}</div>}
 
-      {popup && (
+      {popup && !isMet && (
         <div className="info-card">
           <div className="info-card-head">
             <div>

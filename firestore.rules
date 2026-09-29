@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function bootstrapOwner() {
+      return signedIn()
+        && request.auth.token.email == 'tobigpossetto@gmail.com';
+    }
+
+    function isAdmin() {
+      return bootstrapOwner()
+        || (signedIn()
+          && request.auth.token.email is string
+          && exists(/databases/$(database)/documents/adminEmails/$(request.auth.token.email))
+          && get(/databases/$(database)/documents/adminEmails/$(request.auth.token.email)).data.active == true)
+        || (signedIn()
+          && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true);
+    }
+
+    // El registro detallado y la configuración de campaña son privados.
+    match /registros/{registroId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /config/{documentId} {
+      allow read: if documentId == 'public' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Resumen sin detalle usado por el mapa público.
+    match /territoriosPublicos/{territorioId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /migrations/{migrationId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Cada administrador solo puede comprobar su propio permiso.
+    // La creación de administradores se hace desde Firebase Console.
+    match /admins/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // Lista administrable por correo. Cada usuario puede consultar únicamente
+    // su propio permiso al iniciar sesión; un admin puede listar y administrar.
+    match /adminEmails/{email} {
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.token.email == email);
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin()
+        && request.auth.token.email != email
+        && email != 'tobigpossetto@gmail.com';
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

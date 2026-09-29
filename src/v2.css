@@ -1,0 +1,232 @@
+/* Territorios V2
+   Una capa visual independiente: conserva el mapa, Firebase y los flujos de la
+   aplicación original, pero reorganiza la interfaz como espacio de trabajo. */
+
+.app-v2 {
+  --brand-orange: #ed7100;
+  --brand-orange-dark: #c95700;
+  --brand-orange-soft: #fff0e2;
+  --brand-charcoal: #242120;
+  --brand-charcoal-2: #312d2b;
+  --brand-cream: #f7f5f2;
+  --brand-blue: #668fbe;
+  --success: #2e9e5b;
+  --danger: #c94747;
+  --shell-height: 64px;
+  --rail-width: 190px;
+  color-scheme: light;
+}
+
+.app-v2.theme-light {
+  --panel: rgba(255, 253, 250, .98);
+  --track: #f1eeea;
+  --stroke: rgba(49, 43, 39, .16);
+  --txt: #242120;
+  --muted: #746d68;
+}
+
+.app-v2.theme-dark {
+  --panel: rgba(37, 34, 33, .985);
+  --track: #34302e;
+  --stroke: rgba(255, 255, 255, .16);
+  --txt: #f8f4ef;
+  --muted: #beb7b2;
+  color-scheme: dark;
+}
+
+.app-v2 button,
+.app-v2 input,
+.app-v2 select { letter-spacing: 0; }
+
+.app-v2 .topbar {
+  top: 0; left: 0; right: 0; max-width: none; height: var(--shell-height);
+  padding: 0 18px; gap: 11px; border: 0; border-radius: 0;
+  background: var(--brand-charcoal); color: #fff; pointer-events: auto;
+  box-shadow: 0 2px 12px rgba(34, 29, 27, .22);
+}
+.app-v2 .topbar-brandmark {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px;
+  background: rgba(237, 113, 0, .14); border: 1px solid rgba(237, 113, 0, .35);
+}
+.app-v2 .topbar .logo { width: 32px; height: auto; object-fit: contain; }
+.app-v2 .topbar-copy { display: flex; flex-direction: column; min-width: 0; }
+.app-v2 .topbar h1 { color: #fff; font-size: 17px; line-height: 1.1; }
+.app-v2 .topbar small { margin-top: 3px; color: rgba(255,255,255,.62); font-size: 10px; white-space: nowrap; }
+.app-v2 .topbar-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 11px; border-radius: 8px;
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.78); font-size: 10px; font-weight: 700;
+}
+.app-v2 .topbar-status i { width: 7px; height: 7px; border-radius: 50%; background: #49bb73; box-shadow: 0 0 0 3px rgba(73,187,115,.15); }
+.app-v2 .topbar-status.offline i { background: #ff9f43; box-shadow: 0 0 0 3px rgba(255,159,67,.15); }
+
+.app-v2 .maplibregl-ctrl-group {
+  border-color: rgba(48,43,40,.16) !important; border-radius: 10px !important;
+  background: rgba(255,253,250,.96) !important; box-shadow: 0 4px 16px rgba(39,31,27,.15) !important;
+  overflow: hidden;
+}
+.app-v2 .maplibregl-ctrl-group button { width: 34px; height: 34px; }
+.app-v2 .maplibregl-ctrl-icon { filter: none; }
+.app-v2 .app-theme-control button { color: #4c4541; }
+
+.app-v2 .footer { background: var(--brand-charcoal); border-color: rgba(255,255,255,.08); }
+.app-v2 .footer button { color: rgba(255,255,255,.62); transition: background .18s ease, color .18s ease; }
+.app-v2 .footer button:hover { color: #fff; background: rgba(255,255,255,.06); }
+.app-v2 .footer button.on { color: #fff; background: var(--brand-orange); box-shadow: 0 5px 18px rgba(237,113,0,.24); }
+
+.app-v2 .search-fab {
+  background: var(--panel); color: var(--txt); border-color: var(--stroke);
+  box-shadow: 0 8px 24px rgba(39,31,27,.16); backdrop-filter: blur(18px);
+}
+.app-v2 .search-fab svg { color: var(--brand-orange); }
+
+.app-v2 .camp-legend {
+  background: var(--panel); color: var(--txt); border-color: var(--stroke);
+  box-shadow: 0 8px 24px rgba(39,31,27,.14);
+}
+
+.app-v2 .info-card {
+  transform: none; padding: 0; overflow: hidden;
+  background: var(--panel); border-color: var(--stroke); color: var(--txt);
+  box-shadow: 0 18px 46px rgba(40,32,27,.22);
+}
+.app-v2 .info-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 18px 8px; }
+.app-v2 .info-eyebrow { color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; }
+.app-v2 .info-t { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+.app-v2 .info-t b { color: var(--txt); font-size: 24px; line-height: 1; }
+.app-v2 .info-t span { color: var(--muted); font-size: 12px; }
+.app-v2 .info-close { position: static; width: 32px; height: 32px; border-radius: 8px; background: var(--track); font-size: 22px; }
+.app-v2 .info-status {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 18px 12px; padding: 5px 9px;
+  border-radius: 999px; background: var(--track); color: var(--muted); font-size: 10px; font-weight: 800;
+}
+.app-v2 .info-status i { width: 7px; height: 7px; border-radius: 50%; background: #9d9690; }
+.app-v2 .info-status.active { background: var(--brand-orange-soft); color: #9a4500; }
+.app-v2 .info-status.active i { background: var(--brand-orange); }
+.app-v2 .info-summary { display: grid; gap: 0; border-top: 1px solid var(--stroke); border-bottom: 1px solid var(--stroke); }
+.app-v2 .info-summary > div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 18px; border-top: 1px solid var(--stroke); }
+.app-v2 .info-summary > div:first-child { border-top: 0; }
+.app-v2 .info-summary span { color: var(--muted); font-size: 10.5px; }
+.app-v2 .info-summary b { color: var(--txt); font-size: 11px; text-align: right; }
+.app-v2 .info-actions { display: flex; gap: 8px; padding: 14px 18px 18px; }
+.app-v2 .info-actions button {
+  position: static; width: auto; height: 38px; min-width: 0; flex: 1; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font: 700 10.5px/1 inherit; cursor: pointer;
+}
+.app-v2 .info-actions .info-registro { color: #fff; background: var(--brand-orange); border: 1px solid var(--brand-orange); }
+.app-v2 .info-actions .info-share { color: var(--txt); background: var(--track); border: 1px solid var(--stroke); }
+.app-v2 .info-actions svg { width: 16px; height: 16px; }
+.app-v2 .info-actions .info-share svg { width: 20px; height: 20px; }
+
+.app-v2 .search-sheet,
+.app-v2 .metrica-panel,
+.app-v2 .admin-card { box-shadow: 0 24px 70px rgba(40,32,27,.28); }
+.app-v2 .search-input { border-color: var(--brand-orange); }
+.app-v2 .search-item { border-radius: 10px; }
+.app-v2 .search-item b { color: var(--brand-orange); }
+
+/* Las superficies administrativas usan el mismo lenguaje visual de la app V2. */
+.app-v2 .admin-panel-bg { background: rgba(29,25,23,.44); backdrop-filter: blur(8px); }
+.app-v2 .admin-panel { border-color: var(--stroke); box-shadow: 0 28px 90px rgba(28,23,21,.36); }
+.app-v2 .admin-tabs { background: var(--track); }
+.app-v2 .admin-tabs button.on,
+.app-v2 .admin-mini-btn.primary,
+.app-v2 .admin-foot-btn.primary,
+.app-v2 .admin-c-btn.on { background: var(--brand-orange); border-color: var(--brand-orange); }
+.app-v2 .admin-editor-card { border-color: rgba(237,113,0,.52); background: rgba(237,113,0,.045); }
+.app-v2 .admin-table-wrap { border: 1px solid var(--stroke); border-radius: 12px; overflow: auto; }
+.app-v2 .admin-table thead { background: var(--track); }
+
+@media (min-width: 721px) {
+  .app-v2 .maplibregl-map { inset: var(--shell-height) 0 0 var(--rail-width) !important; }
+  .app-v2 .maplibregl-ctrl-top-right { margin-top: calc(var(--shell-height) + 10px); margin-right: 12px; }
+
+  .app-v2 .footer {
+    top: var(--shell-height); bottom: 0; left: 0; right: auto; transform: none;
+    width: var(--rail-width); padding: 18px 10px; border: 0; border-radius: 0; box-shadow: 4px 0 18px rgba(35,29,27,.14);
+    flex-direction: column; justify-content: flex-start; gap: 7px;
+  }
+  .app-v2 .footer::before {
+    content: 'NAVEGACIÓN'; display: block; padding: 0 12px 7px;
+    color: rgba(255,255,255,.34); font-size: 8px; font-weight: 800; letter-spacing: .16em;
+  }
+  .app-v2 .footer button {
+    flex: 0 0 auto; width: 100%; min-height: 42px; padding: 0 12px; border-radius: 9px;
+    flex-direction: row; justify-content: flex-start; gap: 10px; font-size: 11px;
+  }
+  .app-v2 .footer button svg { width: 18px; height: 18px; }
+  .app-v2 .footer button.on { box-shadow: none; }
+
+  .app-v2 .search-fab {
+    top: calc(var(--shell-height) + 14px); bottom: auto; left: calc(var(--rail-width) + 16px);
+    width: 320px; min-height: 42px; padding: 0 13px; border-radius: 10px; font-size: 12px; justify-content: flex-start;
+  }
+  .app-v2 .search-fab::after { content: '⌘ K'; margin-left: auto; color: var(--muted); font-size: 9px; opacity: .7; }
+
+  .app-v2 .info-card {
+    top: calc(var(--shell-height) + 14px); right: 60px; left: auto; width: 332px; max-width: 332px; border-radius: 14px;
+  }
+  .app-v2 .camp-legend { top: calc(var(--shell-height) + 14px); right: 60px; }
+  .app-v2.has-popup .camp-legend { right: 404px; }
+  .app-v2 .metrica-panel { left: calc(var(--rail-width) + 16px); right: auto; transform: none; bottom: 18px; width: 388px; }
+  .app-v2 .toast { left: calc(50% + var(--rail-width) / 2); }
+
+  .app-v2 .admin-panel {
+    width: min(1180px, calc(100vw - 56px)); max-width: 1180px;
+    height: min(860px, calc(100dvh - 48px)); border-radius: 14px;
+  }
+  .app-v2 .admin-panel-head { padding: 16px 20px 12px; }
+  .app-v2 .admin-panel-title { font-size: 20px; }
+  .app-v2 .admin-tabs { width: auto; }
+  .app-v2 .admin-tabs button { border-color: transparent; }
+  .app-v2 .admin-tabs button.on { box-shadow: none; }
+}
+
+@media (max-width: 720px) {
+  .app-v2 { --shell-height: calc(54px + env(safe-area-inset-top)); }
+  .app-v2 .topbar { height: var(--shell-height); padding: env(safe-area-inset-top) 10px 0; gap: 8px; }
+  .app-v2 .topbar-brandmark { width: 30px; height: 30px; border-radius: 8px; }
+  .app-v2 .topbar .logo { width: 27px; }
+  .app-v2 .topbar h1 { font-size: 14px; }
+  .app-v2 .topbar small { display: none; }
+  .app-v2 .topbar-status { height: 26px; padding: 0 8px; font-size: 8.5px; }
+  .app-v2 .maplibregl-ctrl-top-right { margin-top: calc(var(--shell-height) + 8px); }
+  .app-v2 .maplibregl-ctrl-group button { width: 32px; height: 32px; }
+
+  .app-v2 .footer { gap: 2px; padding: 3px 4px calc(env(safe-area-inset-bottom) + 3px); }
+  .app-v2 .footer button { min-height: 42px; border-radius: 8px; font-size: 9px; }
+  .app-v2 .footer button.on { box-shadow: none; }
+
+  .app-v2 .search-fab {
+    left: 8px; bottom: calc(50px + env(safe-area-inset-bottom)); min-height: 40px;
+    padding: 0 12px; border-radius: 10px; font-size: 11px;
+  }
+  .app-v2 .search-fab svg { width: 17px; height: 17px; }
+  .app-v2.has-popup .search-fab { display: none; }
+
+  .app-v2 .info-card {
+    top: auto; bottom: calc(50px + env(safe-area-inset-bottom)); left: 6px; right: 6px;
+    width: auto; max-width: none; border-radius: 16px; animation: sheetUp .26s cubic-bezier(.2,.7,.2,1);
+  }
+  .app-v2 .info-card-head { padding: 14px 14px 6px; }
+  .app-v2 .info-t b { font-size: 21px; }
+  .app-v2 .info-status { margin: 0 14px 9px; }
+  .app-v2 .info-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-v2 .info-summary > div { flex-direction: column; gap: 3px; padding: 9px 14px; border-top: 0; border-left: 1px solid var(--stroke); }
+  .app-v2 .info-summary > div:first-child { border-left: 0; }
+  .app-v2 .info-summary > div:nth-child(3) { display: none; }
+  .app-v2 .info-summary b { text-align: left; }
+  .app-v2 .info-actions { padding: 10px 14px 14px; }
+  .app-v2 .info-actions button { height: 36px; }
+
+  .app-v2 .camp-legend { top: calc(var(--shell-height) + 8px); right: 48px; padding: 6px 8px; font-size: 9px; }
+  .app-v2 .metrica-panel { bottom: calc(50px + env(safe-area-inset-bottom)); }
+
+  .app-v2 .admin-panel-head { background: var(--brand-charcoal); }
+  .app-v2 .admin-panel-title { color: #fff; }
+  .app-v2 .admin-panel-sub { color: rgba(255,255,255,.62); }
+  .app-v2 .admin-tabs { background: rgba(255,255,255,.08); }
+  .app-v2 .admin-tabs button { color: rgba(255,255,255,.62); }
+  .app-v2 .admin-tabs button.on { color: #fff; }
+}

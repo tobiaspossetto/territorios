@@ -1,0 +1,13 @@
+node_modules
+dist
+.firebase
+.env
+.DS_Store
+*.log
+
+# Respaldo histórico privado: nunca se publica ni se sube
+public/registro.json
+private/
+
+# Capturas generadas localmente (el script sí se versiona)
+scripts/salida/

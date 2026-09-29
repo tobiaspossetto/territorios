@@ -412,12 +412,6 @@ export default function App() {
     setSelected(null); setPopup(null); setTachadas(null); setUrlTerr(null)
   }, [])
 
-  // Métrica es una vista global: nunca debe convivir con la ficha ni con el
-  // estado de un territorio, incluso si la selección llegó tarde por deep-link.
-  useEffect(() => {
-    if (mode === 'metrica' && (selected || popup)) clearTerr()
-  }, [mode, selected, popup, clearTerr])
-
   const onClick = useCallback((e) => {
     const f = e.features && e.features[0]
     if (!f) { clearTerr(); return }
@@ -821,7 +815,7 @@ export default function App() {
         onPick={selectTerr}
       />}
 
-      {isMet && <MetricaPanel data={terrView} meta={meta} />}
+      {isMet && <MetricaPanel data={terrView} meta={meta} selected={popup} onClearSelected={clearTerr} />}
 
       <nav className="footer">
         {/* si el admin apaga "modo campaña" esta vista desaparece para todos */}
@@ -833,7 +827,7 @@ export default function App() {
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
           <IconMap /><span>Mapa</span>
         </button>
-        {adminOn && <button className={isMet ? 'on' : ''} onClick={() => { clearTerr(); setMode('metrica'); setTimeout(fitAll, 0) }}>
+        {adminOn && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
           <IconChart /><span>Métrica</span>
         </button>}
         <button className={showAdminPanel ? 'on' : ''} onClick={() => (adminOn ? setShowAdminPanel(true) : setShowLogin(true))}>

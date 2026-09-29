@@ -8,7 +8,7 @@ function fmtFecha(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
 }
 
-export default function MetricaPanel({ data, meta }) {
+export default function MetricaPanel({ data, meta, selected, onClearSelected }) {
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem('metricaOpen') !== '0' } catch (e) { return true }
   })
@@ -61,7 +61,31 @@ export default function MetricaPanel({ data, meta }) {
 
   return (
     <div className="metrica-panel">
+      {selected && (
+        <div className="mp-selected" aria-label={`Resumen de ${selected.territorio}`}>
+          <div className="mp-selected-main">
+            <div className="mp-selected-title">
+              <b>{selected.territorio}</b>
+              <span>{selected.zona}</span>
+            </div>
+            <span className={'mp-selected-status' + (selected.activo ? ' active' : '')}>
+              <i />{selected.activo ? 'Activo' : 'Disponible'}
+            </span>
+          </div>
+          <div className="mp-selected-stats">
+            <span><small>Veces predicado</small><b>{selected.veces || 0}</b></span>
+            <span><small>Última vez</small><b>{selected.ultima_fmt || 'Sin registro'}</b></span>
+          </div>
+          <button className="mp-selected-close" onClick={onClearSelected} aria-label="Cerrar resumen">×</button>
+        </div>
+      )}
       <div className="mp-header" onPointerDown={onDown} onPointerUp={onUp}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setOpenP(!open)
+          }
+        }}
         role="button" tabIndex={0} aria-expanded={open} aria-label={open ? 'Minimizar gráficos' : 'Expandir gráficos'}>
         <div className="mp-grip" />
         <div className="mp-hrow">

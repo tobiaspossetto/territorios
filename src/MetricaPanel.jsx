@@ -73,7 +73,7 @@ export default function MetricaPanel({ data, meta, selected, onClearSelected }) 
             </span>
           </div>
           <div className="mp-selected-stats">
-            <span><small>Veces predicado</small><b>{selected.veces || 0}</b></span>
+            <span><small>Veces</small><b>{selected.veces || 0}</b></span>
             <span><small>Última vez</small><b>{selected.ultima_fmt || 'Sin registro'}</b></span>
           </div>
           <button className="mp-selected-close" onClick={onClearSelected} aria-label="Cerrar resumen">×</button>

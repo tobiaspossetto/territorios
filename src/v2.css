@@ -148,7 +148,7 @@
 .app-v2 .metrica-panel,
 .app-v2 .admin-card { box-shadow: 0 24px 70px rgba(40,32,27,.28); }
 .app-v2 .mp-selected {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 14px;
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px;
   margin: 0 -4px 5px; padding: 11px 42px 11px 13px; overflow: hidden;
   border: 1px solid rgba(237,113,0,.24); border-radius: 13px;
   background: linear-gradient(135deg, rgba(237,113,0,.09), transparent 52%), var(--track);
@@ -157,8 +157,8 @@
 .app-v2 .mp-selected::before {
   content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--brand-orange);
 }
-.app-v2 .mp-selected-main { min-width: 0; display: flex; align-items: center; gap: 9px; }
-.app-v2 .mp-selected-title { min-width: 0; display: flex; align-items: baseline; gap: 7px; }
+.app-v2 .mp-selected-main { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px 9px; }
+.app-v2 .mp-selected-title { min-width: 0; flex: 1 1 150px; display: flex; align-items: baseline; gap: 7px; }
 .app-v2 .mp-selected-title b { color: var(--txt); font-size: 19px; line-height: 1; letter-spacing: -.02em; }
 .app-v2 .mp-selected-title span { overflow: hidden; color: var(--muted); font-size: 10.5px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .app-v2 .mp-selected-status {
@@ -168,7 +168,7 @@
 .app-v2 .mp-selected-status i { width: 6px; height: 6px; border-radius: 50%; background: #9d9690; }
 .app-v2 .mp-selected-status.active { color: #9a4500; background: var(--brand-orange-soft); border-color: rgba(237,113,0,.22); }
 .app-v2 .mp-selected-status.active i { background: var(--brand-orange); }
-.app-v2 .mp-selected-stats { display: grid; grid-template-columns: auto auto; align-items: stretch; gap: 6px; }
+.app-v2 .mp-selected-stats { display: grid; grid-template-columns: minmax(84px, .72fr) minmax(128px, 1.28fr); align-items: stretch; gap: 6px; }
 .app-v2 .mp-selected-stats > span {
   display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 84px; padding: 6px 8px;
   border: 1px solid var(--stroke); border-radius: 8px; background: var(--panel); white-space: nowrap;
@@ -290,9 +290,10 @@
 
   .app-v2 .camp-legend { top: calc(var(--shell-height) + 8px); right: 48px; padding: 6px 8px; font-size: 9px; }
   .app-v2 .metrica-panel { bottom: calc(50px + env(safe-area-inset-bottom)); }
-  .app-v2 .mp-selected { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-right: 42px; }
-  .app-v2 .mp-selected-main { flex-wrap: wrap; row-gap: 5px; }
-  .app-v2 .mp-selected-stats { grid-template-columns: minmax(78px, .72fr) minmax(128px, 1.28fr); }
+  .app-v2 .metrica-panel { max-height: calc(100dvh - var(--shell-height) - 58px - env(safe-area-inset-bottom)); }
+  .app-v2 .mp-selected { padding-right: 42px; }
+  .app-v2 .mp-selected-title { flex-basis: 128px; }
+  .app-v2 .mp-selected-stats { grid-template-columns: minmax(78px, .72fr) minmax(120px, 1.28fr); }
 
   .app-v2.theme-dark .admin-panel-head { background: var(--brand-charcoal); }
   .app-v2.theme-dark .admin-panel-title { color: #fff; }
@@ -304,4 +305,8 @@
   .app-v2.theme-light .admin-tabs { background: #f0ece8; }
   .app-v2.theme-light .admin-tabs button { color: var(--muted); }
   .app-v2.theme-light .admin-tabs button.on { color: #fff; }
+}
+
+@media (max-width: 350px) {
+  .app-v2 .programa-main-fields { grid-template-columns: minmax(0, 1fr); }
 }

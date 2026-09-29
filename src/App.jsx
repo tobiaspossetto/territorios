@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import Map, { Source, Layer, NavigationControl, GeolocateControl, useControl } from 'react-map-gl/maplibre'
+import Map, { Source, Layer, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre'
 import maplibregl from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -20,33 +20,6 @@ import {
 if (typeof window !== 'undefined' && !window.__pmtilesReg) {
   maplibregl.addProtocol('pmtiles', new Protocol().tile)
   window.__pmtilesReg = true
-}
-
-function ThemeControl({ theme, onToggle }) {
-  const onToggleRef = useRef(onToggle)
-  onToggleRef.current = onToggle
-  const control = useControl(() => {
-    const container = document.createElement('div')
-    container.className = 'maplibregl-ctrl maplibregl-ctrl-group app-theme-control'
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.addEventListener('click', () => onToggleRef.current())
-    container.appendChild(button)
-    return {
-      button,
-      onAdd() { return container },
-      onRemove() { container.remove() },
-    }
-  }, { position: 'top-right' })
-
-  useEffect(() => {
-    const isDark = theme === 'dark'
-    control.button.textContent = isDark ? '☀' : '☾'
-    control.button.setAttribute('aria-label', isDark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro')
-    control.button.title = isDark ? 'Tema claro' : 'Tema oscuro'
-  }, [control, theme])
-
-  return null
 }
 
 // bbox de una geometría GeoJSON (Polygon o MultiPolygon)
@@ -719,7 +692,6 @@ export default function App() {
           trackUserLocation showUserLocation showUserHeading
           positionOptions={{ enableHighAccuracy: true }} onError={onGeoError}
         />
-        <ThemeControl theme={theme} onToggle={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')} />
         {terrView && (
           <Source id="terr" type="geojson" data={terrView}>
             <Layer {...terrFill} />
@@ -777,6 +749,7 @@ export default function App() {
           <small>Congregación Este · San Francisco</small>
         </span>
         <span className={`topbar-status${online ? '' : ' offline'}`}><i />{online ? 'Sincronizado' : 'Sin conexión'}</span>
+        <button className="topbar-theme" onClick={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')} aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}>{theme === 'dark' ? '☀' : '☾'}</button>
       </div>
       {isCamp && (
         <div className="camp-legend">

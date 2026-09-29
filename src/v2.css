@@ -78,6 +78,11 @@
 }
 .app-v2 .topbar-status i { width: 7px; height: 7px; border-radius: 50%; background: #49bb73; box-shadow: 0 0 0 3px rgba(73,187,115,.15); }
 .app-v2 .topbar-status.offline i { background: #ff9f43; box-shadow: 0 0 0 3px rgba(255,159,67,.15); }
+.app-v2 .topbar-theme {
+  flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0;
+  border: 1px solid rgba(255,255,255,.13); border-radius: 8px;
+  background: rgba(255,255,255,.08); color: #fff; font-size: 16px; cursor: pointer;
+}
 
 /* El tema claro alcanza toda la interfaz de aplicación, no solo paneles. */
 .app-v2.theme-light .topbar {
@@ -88,6 +93,7 @@
 .app-v2.theme-light .topbar h1 { color: var(--txt); }
 .app-v2.theme-light .topbar small { color: var(--muted); }
 .app-v2.theme-light .topbar-status { background: #f1eeea; color: #5e5752; }
+.app-v2.theme-light .topbar-theme { border-color: var(--stroke); background: #f1eeea; color: #4c4541; }
 .app-v2.theme-light .footer { background: #fffdfa; border-color: var(--stroke); }
 .app-v2.theme-light .footer button { color: #6d6661; }
 .app-v2.theme-light .footer button:hover { color: var(--txt); background: #f3efeb; }
@@ -281,6 +287,7 @@
   .app-v2 .topbar h1 { font-size: 13px; }
   .app-v2 .topbar small { display: none; }
   .app-v2 .topbar-status { height: 24px; padding: 0 7px; font-size: 8px; }
+  .app-v2 .topbar-theme { width: 26px; height: 26px; border-radius: 7px; font-size: 14px; }
   .app-v2 .maplibregl-ctrl-top-right { margin-top: calc(var(--shell-height) + 6px); }
   .app-v2 .maplibregl-ctrl-group button { width: 32px; height: 32px; }
 

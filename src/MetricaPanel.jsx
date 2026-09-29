@@ -8,7 +8,7 @@ function fmtFecha(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
 }
 
-export default function MetricaPanel({ data, meta, selected, onClearSelected }) {
+export default function MetricaPanel({ data, meta, selected, reference, onReferenceChange, onClearSelected }) {
   const [open, setOpen] = useState(() => {
     try { return localStorage.getItem('metricaOpen') !== '0' } catch (e) { return true }
   })
@@ -34,10 +34,13 @@ export default function MetricaPanel({ data, meta, selected, onClearSelected }) 
   const total = feats.length
   const completados = feats.filter((f) => f.veces > 0).length
 
-  // promedio dinámico: cada cuánto se hace un territorio.
-  // (territorios × días desde 01/06/2026) ÷ total de pasadas completas
-  const INICIO = new Date(2026, 5, 1)
-  const dias = Math.max(1, Math.round((Date.now() - INICIO.getTime()) / 86400000))
+  // promedio dinámico: cada cuánto se hace un territorio dentro de la referencia elegida.
+  const now = new Date()
+  const serviceYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  const firstHistorical = feats.map((f) => f.primera).filter(Boolean).sort()[0]
+  const referenceStart = reference === 'service' ? `${serviceYear}-09-01` : firstHistorical
+  const inicio = referenceStart ? new Date(`${referenceStart}T00:00:00`) : now
+  const dias = Math.max(1, Math.round((Date.now() - inicio.getTime()) / 86400000))
   const pasadas = feats.reduce((s, f) => s + (f.veces || 0), 0)
   const promDias = pasadas > 0 ? Math.round((total * dias) / pasadas) : null
 
@@ -73,12 +76,21 @@ export default function MetricaPanel({ data, meta, selected, onClearSelected }) 
             </span>
           </div>
           <div className="mp-selected-stats">
-            <span><small>Veces</small><b>{selected.veces || 0}</b></span>
-            <span><small>Última vez</small><b>{selected.ultima_fmt || 'Sin registro'}</b></span>
+            <span><small>Año de servicio</small><b>{selected.veces_servicio || 0}</b></span>
+            <span><small>Total histórico</small><b>{selected.veces || 0}</b></span>
+            <span><small>Última visita</small><b>{selected.ultima_fmt || 'Sin registro'}</b></span>
           </div>
           <button className="mp-selected-close" onClick={onClearSelected} aria-label="Cerrar resumen">×</button>
         </div>
       )}
+      <div className="mp-reference" aria-label="Referencia de métricas">
+        <span>Referencia</span>
+        <div>
+          <button className={reference === 'service' ? 'on' : ''} onClick={() => onReferenceChange('service')} aria-pressed={reference === 'service'}>Año de servicio</button>
+          <button className={reference === 'history' ? 'on' : ''} onClick={() => onReferenceChange('history')} aria-pressed={reference === 'history'}>Historial completo</button>
+        </div>
+        <small>Total histórico desde {fmtFecha(firstHistorical) || 'el primer registro'}.</small>
+      </div>
       <div className="mp-header" onPointerDown={onDown} onPointerUp={onUp}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -143,7 +155,7 @@ export default function MetricaPanel({ data, meta, selected, onClearSelected }) 
             {infoOpen && (
               <div className="mp-avg-info">
                 Estimación de cada cuánto se vuelve a predicar un territorio.
-                Se calcula: (territorios × días desde que arrancó el registro) ÷ total de veces predicadas.
+                Se calcula: (territorios × días desde la referencia elegida) ÷ total de veces predicadas.
                 Cuenta también los territorios que todavía no se hicieron.
               </div>
             )}

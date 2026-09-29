@@ -171,6 +171,9 @@ export default function App() {
   })
   const [campModoOn, setCampModoOn] = useState(false)
   const [metricsVisible, setMetricsVisibleState] = useState(true)
+  const [metricReference, setMetricReference] = useState(() => {
+    try { return localStorage.getItem('metric-reference') === 'history' ? 'history' : 'service' } catch { return 'service' }
+  })
   const [mode, setMode] = useState('mapa') // 'mapa' | 'metrica' | 'campana'
   const [terr, setTerr] = useState(null)
   const [manz, setManz] = useState(null)
@@ -204,6 +207,16 @@ export default function App() {
   const adminOn = !!adminUser
   const terrView = useMemo(() => applyPublicSummaries(terr, publicSummaries), [terr, publicSummaries])
   const manzView = useMemo(() => applyPublicSummaries(manz, publicSummaries), [manz, publicSummaries])
+  const metricTerrView = useMemo(() => !terrView ? null : ({
+    ...terrView,
+    features: terrView.features.map((feature) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        veces: metricReference === 'service' ? (feature.properties.veces_servicio || 0) : (feature.properties.veces || 0),
+      },
+    })),
+  }), [terrView, metricReference])
   const terrLabels = useMemo(() => (terrView ? toLabelFC(terrView) : null), [terrView])
   const manzLabels = useMemo(() => (manzView ? toLabelFC(manzView) : null), [manzView])
 
@@ -260,6 +273,10 @@ export default function App() {
       document.documentElement.dataset.appTheme = theme
     } catch { /* preferencia opcional */ }
   }, [theme])
+
+  useEffect(() => {
+    try { localStorage.setItem('metric-reference', metricReference) } catch { /* preferencia opcional */ }
+  }, [metricReference])
 
   const hideSplash = useCallback(() => {
     const r = ready.current
@@ -705,7 +722,7 @@ export default function App() {
           positionOptions={{ enableHighAccuracy: true }} onError={onGeoError}
         />
         {terrView && (
-          <Source id="terr" type="geojson" data={terrView}>
+          <Source id="terr" type="geojson" data={isMet ? metricTerrView : terrView}>
             <Layer {...terrFill} />
             <Layer {...terrGlow} />
             <Layer {...terrLine} />
@@ -800,7 +817,7 @@ export default function App() {
         onPick={selectTerr}
       />}
 
-      {isMet && <MetricaPanel data={terrView} meta={meta} selected={popup} onClearSelected={clearTerr} />}
+      {isMet && <MetricaPanel data={metricTerrView} meta={meta} selected={popup} reference={metricReference} onReferenceChange={setMetricReference} onClearSelected={clearTerr} />}
 
       <nav className="footer">
         {/* si el admin apaga "modo campaña" esta vista desaparece para todos */}

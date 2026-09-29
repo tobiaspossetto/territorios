@@ -35,7 +35,7 @@ export default function PublicGuide({ campaignVisible, metricsVisible, adminVisi
         {metricsVisible && <GuideSection icon={<IconChart />} title="Métrica" preview={<img className="guide-preview guide-preview-metric" src="guia-metrica.png" alt="Ejemplo del resumen de métricas y avance por zona" />}>
           <li>Resume el avance y la frecuencia.</li>
           <li>Compara los resultados por zona.</li>
-          <li>Puede estar oculta según la configuración.</li>
+          <li>Cambiá la referencia entre <b>Año de servicio</b> e <b>Historial completo</b>.</li>
         </GuideSection>}
         {adminVisible && <div className="guide-admin-block">
           <div className="guide-admin-heading"><IconAdmin /><div><h3>Administración</h3><p>Herramientas disponibles únicamente para administradores.</p></div></div>

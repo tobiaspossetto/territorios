@@ -111,11 +111,23 @@ export function subscribePublicState(onData, onError) {
 
 function summary(rows) {
   const completas = rows.filter((r) => r.inicio && r.fin)
+  const now = new Date()
+  const serviceYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  const vecesPorAnoServicio = completas.reduce((counts, record) => {
+    const [year, month] = record.fin.split('-').map(Number)
+    const key = String(month >= 9 ? year : year - 1)
+    counts[key] = (counts[key] || 0) + 1
+    return counts
+  }, {})
   const ultima = completas.map((r) => r.fin).sort().slice(-1)[0] || null
+  const primera = completas.map((r) => r.fin).sort()[0] || null
   const campania = rows.filter((r) => r.campania)
   const activa = rows.filter((r) => r.inicio && !r.fin).sort((a, b) => (b.createdOrder || 0) - (a.createdOrder || 0))[0]
   return {
     veces: completas.length,
+    vecesServicio: vecesPorAnoServicio[String(serviceYear)] || 0,
+    vecesPorAnoServicio,
+    primera,
     ultima,
     activo: !!activa,
     campania: campania.length > 0,
@@ -135,7 +147,7 @@ async function recomputeTerritory(territorio) {
 // entrar un administrador y queda registrada para no repetir escrituras.
 export async function ensurePublicMapSummary(records) {
   assertFirebase()
-  const migrationRef = doc(firestore, 'migrations', 'public-map-summary-v1')
+  const migrationRef = doc(firestore, 'migrations', 'public-map-summary-v2')
   if ((await getDoc(migrationRef)).exists()) return
   const grouped = new Map()
   for (const record of records || []) {
@@ -147,7 +159,7 @@ export async function ensurePublicMapSummary(records) {
   for (const [territorio, rows] of grouped) {
     batch.set(doc(firestore, 'territoriosPublicos', territorio), summary(rows))
   }
-  batch.set(migrationRef, { completedAt: Date.now(), version: 1 })
+  batch.set(migrationRef, { completedAt: Date.now(), version: 2 })
   await batch.commit()
 }
 
@@ -252,6 +264,8 @@ export async function saveProgramDraft(salidas) {
 export function applyPublicSummaries(fc, summaries) {
   if (!fc || !summaries) return fc
   const now = Date.now()
+  const current = new Date()
+  const serviceYear = current.getMonth() >= 8 ? current.getFullYear() : current.getFullYear() - 1
   return {
     ...fc,
     features: fc.features.map((feature) => {
@@ -264,6 +278,8 @@ export function applyPublicSummaries(fc, summaries) {
         properties: {
           ...p,
           veces: s.veces || 0,
+          veces_servicio: s.vecesPorAnoServicio?.[String(serviceYear)] ?? s.vecesServicio ?? 0,
+          primera: s.primera || null,
           ultima_fmt: s.ultima ? s.ultima.split('-').reverse().join('/') : 'sin registro',
           dias_desde: dias,
           activo: s.activo === true,

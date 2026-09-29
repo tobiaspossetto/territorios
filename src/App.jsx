@@ -856,6 +856,7 @@ export default function App() {
           syncError={adminSyncError}
           currentEmail={adminUser.email || ''}
           theme={theme}
+          onThemeToggle={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')}
         />
       )}
 

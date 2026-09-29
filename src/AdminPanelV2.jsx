@@ -22,7 +22,7 @@ const isTemp = (id) => String(id).startsWith('nuevo-')
 
 export default function AdminPanel({
   data, manzanas, registroBase, onSave, onLogout, onClose,
-  onCampModoChange, campModoOn, initialQuery, syncError, currentEmail, theme,
+  onCampModoChange, campModoOn, initialQuery, syncError, currentEmail, theme, onThemeToggle,
 }) {
   const [view, setView] = useState('registros')
   const [q, setQ] = useState(initialQuery || '')
@@ -161,6 +161,7 @@ export default function AdminPanel({
                 </div>}
               </div>}
               {view === 'registros' && <button className={'admin-head-save' + (dirty ? ' dirty' : '')} onClick={guardar} disabled={!dirty || saving} aria-label="Guardar cambios" title="Guardar cambios">{saving ? '…' : 'Guardar'}</button>}
+              <button className="search-x admin-theme-toggle" onClick={onThemeToggle} aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}>{theme === 'dark' ? '☀' : '☾'}</button>
               <button className="search-x" onClick={pedirCierre} aria-label="Cerrar">×</button>
             </div>
           </div>

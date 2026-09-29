@@ -5,9 +5,8 @@ mapa y Firebase de la versión actual, pero incorpora una nueva interfaz de
 trabajo inspirada en los principios de SAP Fiori y adaptada a la identidad
 visual existente: carbón, naranja, crema y azul suave.
 
-La V2 tiene configurado un sitio de Firebase separado
-(`territorios-este-sf-v2`) para impedir que un despliegue accidental reemplace
-la aplicación original.
+La V2 se publica en el hosting principal `territorios-este-sf`, reemplazando la
+interfaz anterior y conservando el mismo dominio.
 
 ## Desarrollo
 
@@ -35,5 +34,8 @@ Para actualizar: correr el script y commitear los `public/*.geojson`.
 npm run build
 ```
 
-El despliegue de esta V2 debe configurarse de forma independiente. No utiliza
-el hosting de producción de la aplicación original.
+Para compilar y publicar en Firebase Hosting:
+
+```bash
+./deploy.sh
+```

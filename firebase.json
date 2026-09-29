@@ -3,7 +3,7 @@
     "rules": "firestore.rules"
   },
   "hosting": {
-    "site": "territorios-este-sf-v2",
+    "site": "territorios-este-sf",
     "public": "dist",
     "ignore": [
       "firebase.json",

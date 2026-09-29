@@ -6,6 +6,7 @@ export default function Splash({ out }) {
         <img className="splash-mark" src="logo-furgon.png" alt="" />
         <div className="splash-title">TERRITORIOS</div>
         <div className="splash-sub">Cong Este SF</div>
+        <div className="splash-loader" aria-label="Cargando"><i /><i /><i /></div>
       </div>
     </div>
   )

@@ -1,8 +1,10 @@
 #!/bin/bash
-# La V2 no reutiliza el flujo de despliegue de la aplicación original.
-# Antes de publicar se debe crear y autorizar el sitio Firebase independiente
-# `territorios-este-sf-v2`. Este bloqueo evita sobrescribir producción por error.
+# Compila y publica la V2 sobre el hosting principal solicitado.
 set -e
+cd "$(dirname "$0")"
 
-echo "Deploy bloqueado: configurá primero el hosting independiente territorios-este-sf-v2."
-exit 1
+echo "==> build"
+npm run build
+
+echo "==> deploy Firebase Hosting"
+npx --yes firebase-tools deploy --only hosting --project territorios-este-sf

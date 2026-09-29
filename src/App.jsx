@@ -294,7 +294,7 @@ export default function App() {
       publicConfigLoaded.current = true
       setMode(campaignMode ? 'campana' : 'mapa')
     } else {
-      setMode((m) => ((m === 'campana' && !campaignMode) || (m === 'metrica' && !showMetrics) ? 'mapa' : m))
+      setMode((m) => (m === 'campana' && !campaignMode ? 'mapa' : m))
     }
   }, (error) => console.error('Firebase público:', error)), [])
 
@@ -308,6 +308,10 @@ export default function App() {
       setAdminSyncError('No se pudieron sincronizar los registros privados.')
     })
   }, [adminUser])
+
+  useEffect(() => {
+    if (!adminOn && !metricsVisible && mode === 'metrica') setMode('mapa')
+  }, [adminOn, metricsVisible, mode])
 
   useEffect(() => {
     const r = () => mapRef.current && mapRef.current.resize()
@@ -798,7 +802,7 @@ export default function App() {
         <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
           <IconMap /><span>Mapa</span>
         </button>
-        {metricsVisible && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
+        {(adminOn || metricsVisible) && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
           <IconChart /><span>Métrica</span>
         </button>}
         <button className={showAdminPanel ? 'on' : ''} onClick={() => (adminOn ? setShowAdminPanel(true) : setShowLogin(true))}>

@@ -182,8 +182,8 @@ export default function AdminPanel({
                 <button className={'admin-switch' + (campModoOn ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onCampModoChange(!campModoOn))} aria-label="Mostrar modo campaña" aria-pressed={campModoOn}><span className="admin-switch-knob" /></button>
               </div>
               <div className="admin-campmode">
-                <div><div className="admin-campmode-label">Mostrar Métrica</div><div className="admin-campmode-sub">{metricsVisible ? 'Visible para todos.' : 'Oculta para todos.'}</div></div>
-                <button className={'admin-switch' + (metricsVisible ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onMetricsVisibleChange(!metricsVisible))} aria-label="Mostrar Métrica para todos" aria-pressed={metricsVisible}><span className="admin-switch-knob" /></button>
+                <div><div className="admin-campmode-label">Métrica pública</div><div className="admin-campmode-sub">{metricsVisible ? 'Visible sin iniciar sesión.' : 'Solo visible para administradores.'}</div></div>
+                <button className={'admin-switch' + (metricsVisible ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onMetricsVisibleChange(!metricsVisible))} aria-label="Mostrar Métrica a usuarios públicos" aria-pressed={metricsVisible}><span className="admin-switch-knob" /></button>
               </div>
             </div>
             <div className="admin-search"><IconSearch /><input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Filtrar por N° de territorio" value={q} onChange={(e) => setQ(e.target.value)} /></div>

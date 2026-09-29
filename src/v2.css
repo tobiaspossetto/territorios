@@ -34,9 +34,20 @@
   color-scheme: dark;
 }
 
+.app-v2.theme-light .splash { background: var(--brand-cream); }
+.app-v2.theme-light .splash-title { color: var(--brand-charcoal); }
+.app-v2.theme-light .splash-sub { color: #746d68; }
+.app-v2.theme-dark .splash { background: #000; }
+.app-v2.theme-dark .splash-title { color: #f2efed; }
+.app-v2.theme-dark .splash-sub { color: #b7b1ae; }
+
 .app-v2 button,
 .app-v2 input,
 .app-v2 select { letter-spacing: 0; }
+
+.app-v2 .topbar,
+.app-v2 .footer,
+.app-v2 .admin-panel-head { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
 
 .app-v2 .topbar {
   top: 0; left: 0; right: 0; max-width: none; height: var(--shell-height);
@@ -59,6 +70,20 @@
 }
 .app-v2 .topbar-status i { width: 7px; height: 7px; border-radius: 50%; background: #49bb73; box-shadow: 0 0 0 3px rgba(73,187,115,.15); }
 .app-v2 .topbar-status.offline i { background: #ff9f43; box-shadow: 0 0 0 3px rgba(255,159,67,.15); }
+
+/* El tema claro alcanza toda la interfaz de aplicación, no solo paneles. */
+.app-v2.theme-light .topbar {
+  background: #fffdfa; color: var(--txt); border-bottom: 1px solid var(--stroke);
+  box-shadow: 0 2px 12px rgba(54,44,38,.10);
+}
+.app-v2.theme-light .topbar-brandmark { background: var(--brand-orange-soft); border-color: rgba(237,113,0,.24); }
+.app-v2.theme-light .topbar h1 { color: var(--txt); }
+.app-v2.theme-light .topbar small { color: var(--muted); }
+.app-v2.theme-light .topbar-status { background: #f1eeea; color: #5e5752; }
+.app-v2.theme-light .footer { background: #fffdfa; border-color: var(--stroke); }
+.app-v2.theme-light .footer button { color: #6d6661; }
+.app-v2.theme-light .footer button:hover { color: var(--txt); background: #f3efeb; }
+.app-v2.theme-light .footer button.on { color: #fff; background: var(--brand-orange); }
 
 .app-v2 .maplibregl-ctrl-group {
   border-color: rgba(48,43,40,.16) !important; border-radius: 10px !important;
@@ -145,12 +170,14 @@
   .app-v2 .footer {
     top: var(--shell-height); bottom: 0; left: 0; right: auto; transform: none;
     width: var(--rail-width); padding: 18px 10px; border: 0; border-radius: 0; box-shadow: 4px 0 18px rgba(35,29,27,.14);
-    flex-direction: column; justify-content: flex-start; gap: 7px;
+    flex-direction: column; justify-content: flex-start; gap: 7px; border-right: 1px solid rgba(255,255,255,.08);
   }
   .app-v2 .footer::before {
     content: 'NAVEGACIÓN'; display: block; padding: 0 12px 7px;
     color: rgba(255,255,255,.34); font-size: 8px; font-weight: 800; letter-spacing: .16em;
   }
+  .app-v2.theme-light .footer { box-shadow: 4px 0 18px rgba(54,44,38,.08); border-right-color: var(--stroke); }
+  .app-v2.theme-light .footer::before { color: #9a928c; }
   .app-v2 .footer button {
     flex: 0 0 auto; width: 100%; min-height: 42px; padding: 0 12px; border-radius: 9px;
     flex-direction: row; justify-content: flex-start; gap: 10px; font-size: 11px;
@@ -178,9 +205,17 @@
   }
   .app-v2 .admin-panel-head { padding: 16px 20px 12px; }
   .app-v2 .admin-panel-title { font-size: 20px; }
-  .app-v2 .admin-tabs { width: auto; }
+  .app-v2 .admin-tabs { width: auto; margin-top: 16px; margin-bottom: 4px; }
   .app-v2 .admin-tabs button { border-color: transparent; }
   .app-v2 .admin-tabs button.on { box-shadow: none; }
+  .app-v2 .admin-panel-sub { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--stroke); }
+  .app-v2 .admin-record-tools { margin-top: 18px; margin-bottom: 13px; }
+  .app-v2 .admin-filtros { margin-top: 2px; margin-bottom: 15px; }
+  .app-v2 .admin-table-wrap { margin-top: 2px; }
+  .app-v2 .admin-table th { padding: 10px 12px; }
+  .app-v2 .admin-table td { padding: 8px 12px; }
+  .app-v2 .programa-intro { padding-top: 24px; padding-bottom: 14px; }
+  .app-v2 .programa-card { margin-bottom: 14px; }
 }
 
 @media (max-width: 720px) {
@@ -194,7 +229,7 @@
   .app-v2 .maplibregl-ctrl-top-right { margin-top: calc(var(--shell-height) + 8px); }
   .app-v2 .maplibregl-ctrl-group button { width: 32px; height: 32px; }
 
-  .app-v2 .footer { gap: 2px; padding: 3px 4px calc(env(safe-area-inset-bottom) + 3px); }
+  .app-v2 .footer { z-index: 24; gap: 2px; padding: 3px 4px calc(env(safe-area-inset-bottom) + 3px); }
   .app-v2 .footer button { min-height: 42px; border-radius: 8px; font-size: 9px; }
   .app-v2 .footer button.on { box-shadow: none; }
 
@@ -206,7 +241,7 @@
   .app-v2.has-popup .search-fab { display: none; }
 
   .app-v2 .info-card {
-    top: auto; bottom: calc(50px + env(safe-area-inset-bottom)); left: 6px; right: 6px;
+    top: auto; bottom: calc(56px + env(safe-area-inset-bottom)); left: 6px; right: 6px;
     width: auto; max-width: none; border-radius: 16px; animation: sheetUp .26s cubic-bezier(.2,.7,.2,1);
   }
   .app-v2 .info-card-head { padding: 14px 14px 6px; }
@@ -221,12 +256,16 @@
   .app-v2 .info-actions button { height: 36px; }
 
   .app-v2 .camp-legend { top: calc(var(--shell-height) + 8px); right: 48px; padding: 6px 8px; font-size: 9px; }
-  .app-v2 .metrica-panel { bottom: calc(50px + env(safe-area-inset-bottom)); }
+  .app-v2 .metrica-panel { bottom: calc(56px + env(safe-area-inset-bottom)); }
 
-  .app-v2 .admin-panel-head { background: var(--brand-charcoal); }
-  .app-v2 .admin-panel-title { color: #fff; }
-  .app-v2 .admin-panel-sub { color: rgba(255,255,255,.62); }
-  .app-v2 .admin-tabs { background: rgba(255,255,255,.08); }
-  .app-v2 .admin-tabs button { color: rgba(255,255,255,.62); }
-  .app-v2 .admin-tabs button.on { color: #fff; }
+  .app-v2.theme-dark .admin-panel-head { background: var(--brand-charcoal); }
+  .app-v2.theme-dark .admin-panel-title { color: #fff; }
+  .app-v2.theme-dark .admin-panel-sub { color: rgba(255,255,255,.62); }
+  .app-v2.theme-dark .admin-tabs { background: rgba(255,255,255,.08); }
+  .app-v2.theme-dark .admin-tabs button { color: rgba(255,255,255,.62); }
+  .app-v2.theme-dark .admin-tabs button.on { color: #fff; }
+  .app-v2.theme-light .admin-panel-head { background: #fffdfa; color: var(--txt); }
+  .app-v2.theme-light .admin-tabs { background: #f0ece8; }
+  .app-v2.theme-light .admin-tabs button { color: var(--muted); }
+  .app-v2.theme-light .admin-tabs button.on { color: #fff; }
 }

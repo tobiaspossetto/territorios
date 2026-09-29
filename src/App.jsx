@@ -273,7 +273,10 @@ export default function App() {
   }, [manz])
 
   useEffect(() => {
-    try { localStorage.setItem('app-v2-theme', theme) } catch { /* preferencia opcional */ }
+    try {
+      localStorage.setItem('app-v2-theme', theme)
+      document.documentElement.dataset.appTheme = theme
+    } catch { /* preferencia opcional */ }
   }, [theme])
 
   const hideSplash = useCallback(() => {

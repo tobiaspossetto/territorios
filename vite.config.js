@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',   // registro manual en main.jsx -> auto-aplica y recarga al haber versión nueva
       injectRegister: null,
-      includeAssets: ['icono.png'],
+      includeAssets: ['icono.png', 'logo-furgon.png'],
       manifest: {
         name: 'Territorios V2 · Congregación Este',
         short_name: 'Territorios V2',

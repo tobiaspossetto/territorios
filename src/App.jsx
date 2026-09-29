@@ -5,10 +5,11 @@ import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { MAP_STYLE, COLORS, COLORS_HECHO, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
 import MetricaPanel from './MetricaPanel.jsx'
+import PublicGuide from './PublicGuide.jsx'
 import Splash from './Splash.jsx'
 import Buscador from './Buscador.jsx'
 import { bordeConCalles } from './calles.js'
-import { IconMap, IconChart, IconPath, IconWhatsapp, IconLock, IconLockOpen, IconList } from './icons.jsx'
+import { IconMap, IconChart, IconPath, IconGuide, IconAdmin, IconWhatsapp, IconList } from './icons.jsx'
 import AdminLogin from './AdminLogin.jsx'
 import AdminPanel from './AdminPanelV2.jsx'
 import {
@@ -186,6 +187,7 @@ export default function App() {
   const [adminUser, setAdminUser] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
   const [adminInitialQuery, setAdminInitialQuery] = useState('')
   const [registroBase, setRegistroBase] = useState([])
   const [publicSummaries, setPublicSummaries] = useState({})
@@ -795,20 +797,25 @@ export default function App() {
       <nav className="footer">
         {/* si el admin apaga "modo campaña" esta vista desaparece para todos */}
         {campModoOn && (
-          <button className={isCamp ? 'on' : ''} onClick={() => setMode('campana')}>
+          <button className={!showGuide && isCamp ? 'on' : ''} onClick={() => { setShowGuide(false); setMode('campana') }}>
             <IconPath /><span>Campaña</span>
           </button>
         )}
-        <button className={mode === 'mapa' ? 'on' : ''} onClick={() => setMode('mapa')}>
+        <button className={!showGuide && mode === 'mapa' ? 'on' : ''} onClick={() => { setShowGuide(false); setMode('mapa') }}>
           <IconMap /><span>Mapa</span>
         </button>
-        {(adminOn || metricsVisible) && <button className={isMet ? 'on' : ''} onClick={() => { setMode('metrica'); setTimeout(fitAll, 0) }}>
+        {(adminOn || metricsVisible) && <button className={!showGuide && isMet ? 'on' : ''} onClick={() => { setShowGuide(false); setMode('metrica'); setTimeout(fitAll, 0) }}>
           <IconChart /><span>Métrica</span>
         </button>}
-        <button className={showAdminPanel ? 'on' : ''} onClick={() => (adminOn ? setShowAdminPanel(true) : setShowLogin(true))}>
-          {adminOn ? <IconLockOpen /> : <IconLock />}<span>Admin</span>
+        <button className={showGuide ? 'on' : ''} onClick={() => setShowGuide(true)}>
+          <IconGuide /><span>Guía</span>
+        </button>
+        <button className={showAdminPanel ? 'on' : ''} onClick={() => { setShowGuide(false); adminOn ? setShowAdminPanel(true) : setShowLogin(true) }}>
+          <IconAdmin /><span>Admin</span>
         </button>
       </nav>
+
+      {showGuide && <PublicGuide campaignVisible={campModoOn} metricsVisible={metricsVisible} onClose={() => setShowGuide(false)} />}
 
       {showLogin && (
         <AdminLogin

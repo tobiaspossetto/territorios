@@ -19,11 +19,25 @@ export const IconChart = (p) => (
   </svg>
 )
 
-// sendero + destino: mismo motivo del "camino hacia la meta" para Campaña
+// Megáfono: la campaña se comunica como una asignación especial.
 export const IconPath = (p) => (
   <svg {...base} {...p}>
-    <path d="M3.5 19c2.5-.5 3-2.5 5-3.5s2.5 1.5 4.5.8 1.8-3.3 3.8-4.3" />
-    <circle cx="18.5" cy="6.5" r="2" />
+    <path d="M4 11v3a2 2 0 0 0 2 2h2l2.2 4h2.3l-1.7-4H12l7 3V6l-7 3H6a2 2 0 0 0-2 2Z" />
+    <path d="M12 9v7" />
+  </svg>
+)
+
+export const IconGuide = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 5.5A3.5 3.5 0 0 1 7.5 4H11a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H7.5A3.5 3.5 0 0 0 4 19.5v-14Z" />
+    <path d="M20 5.5A3.5 3.5 0 0 0 16.5 4H13v16a2 2 0 0 1 2-2h1.5a3.5 3.5 0 0 1 3.5 1.5v-14Z" />
+  </svg>
+)
+
+export const IconAdmin = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="8" r="3.5" />
+    <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
   </svg>
 )
 
@@ -91,4 +105,3 @@ export const IconWhatsapp = (p) => (
     <path fill="#fff" d="M12.4 9.1c-.3-.6-.5-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8s1.2 3.3 1.4 3.5c.2.2 2.4 3.8 5.9 5.1 2.9 1.1 3.5.9 4.2.9.6-.1 2-.8 2.3-1.6.3-.8.3-1.5.2-1.6-.1-.1-.3-.2-.7-.4-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.4-.2-1.5-.6-2.9-1.8-1.1-.9-1.8-2.1-2-2.5-.2-.3 0-.5.1-.7.2-.2.3-.4.5-.6.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6-.1-.2-.8-1.9-1-2.4Z" />
   </svg>
 )
-

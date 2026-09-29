@@ -185,12 +185,17 @@ export default function App() {
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
   const adminPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('adminPreview')
+  const previewRecords = adminPreview ? [
+    { id: 'preview-1', territorio: 'T18', inicio: '2026-09-18', fin: '2026-09-22', campania: true, manzanasActivas: null },
+    { id: 'preview-2', territorio: 'T25', inicio: '2026-09-24', fin: null, campania: true, manzanasActivas: ['1', '3', '4'] },
+    { id: 'preview-3', territorio: 'T31', inicio: '2026-09-15', fin: '2026-09-19', campania: false, manzanasActivas: null },
+  ] : []
   const [adminUser, setAdminUser] = useState(() => adminPreview ? { email: 'preview@local.test' } : null)
   const [showLogin, setShowLogin] = useState(false)
   const [showAdminPanel, setShowAdminPanel] = useState(adminPreview)
   const [showGuide, setShowGuide] = useState(false)
   const [adminInitialQuery, setAdminInitialQuery] = useState('')
-  const [registroBase, setRegistroBase] = useState([])
+  const [registroBase, setRegistroBase] = useState(previewRecords)
   const [publicSummaries, setPublicSummaries] = useState({})
   const [publicConfigReady, setPublicConfigReady] = useState(false)
   const [adminSyncError, setAdminSyncError] = useState('')
@@ -304,6 +309,7 @@ export default function App() {
 
   useEffect(() => {
     if (!adminUser) { setRegistroBase([]); return undefined }
+    if (adminPreview) return undefined
     return subscribeRecords((records) => {
       setRegistroBase(records)
       ensurePublicMapSummary(records).catch((error) => console.error('Actualización de resúmenes públicos:', error))
@@ -311,7 +317,7 @@ export default function App() {
       console.error(error)
       setAdminSyncError('No se pudieron sincronizar los registros privados.')
     })
-  }, [adminUser])
+  }, [adminUser, adminPreview])
 
   useEffect(() => {
     if (!adminOn && !metricsVisible && mode === 'metrica') setMode('mapa')
@@ -817,7 +823,7 @@ export default function App() {
         </button>
       </nav>
 
-      {showGuide && <PublicGuide campaignVisible={campModoOn} metricsVisible={metricsVisible} onClose={() => setShowGuide(false)} />}
+      {showGuide && <PublicGuide campaignVisible={campModoOn} metricsVisible={metricsVisible} adminVisible={adminOn} onClose={() => setShowGuide(false)} />}
 
       {showLogin && (
         <AdminLogin
@@ -843,6 +849,7 @@ export default function App() {
           currentEmail={adminUser.email || ''}
           theme={theme}
           onThemeToggle={() => setTheme((value) => value === 'dark' ? 'light' : 'dark')}
+          preview={adminPreview}
         />
       )}
 

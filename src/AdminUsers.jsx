@@ -3,18 +3,24 @@ import {
   addAdminEmail, bootstrapAdminEmail, removeAdminEmail, subscribeAdminEmails,
 } from './firebaseData.js'
 
-export default function AdminUsers({ currentEmail, onLogout }) {
-  const [admins, setAdmins] = useState([])
+export default function AdminUsers({ currentEmail, onLogout, preview = false }) {
+  const [admins, setAdmins] = useState(() => preview ? [
+    { id: 'coordinacion@example.com', email: 'coordinacion@example.com' },
+    { id: 'territorios@example.com', email: 'territorios@example.com' },
+  ] : [])
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const principal = bootstrapAdminEmail()
+  const principal = preview ? 'responsable@example.com' : bootstrapAdminEmail()
   const current = String(currentEmail || '').toLowerCase()
 
-  useEffect(() => subscribeAdminEmails(setAdmins, (e) => {
-    console.error(e)
-    setError('No se pudo cargar la lista de administradores.')
-  }), [])
+  useEffect(() => {
+    if (preview) return undefined
+    return subscribeAdminEmails(setAdmins, (e) => {
+      console.error(e)
+      setError('No se pudo cargar la lista de administradores.')
+    })
+  }, [preview])
 
   const rows = useMemo(() => {
     const list = admins.filter((a) => a.email !== principal)

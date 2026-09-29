@@ -99,13 +99,23 @@ function descargarPrograma(salidas) {
   }, 'image/png')
 }
 
-export default function ProgramGenerator() {
-  const [salidas, setSalidas] = useState([salidaVacia()])
+const previewSalidas = () => [
+  { id: 'preview-s1', dia: 'JUEVES', horario: '17:15', grupos: false, detalles: [{ id: 'preview-d1', grupo: '', lugar: 'Traverso', territorio: 'T15', conductor: 'Luis D.' }] },
+  { id: 'preview-s2', dia: 'SÁBADO', horario: '09:40', grupos: true, detalles: [
+    { id: 'preview-d2', grupo: 'G1', lugar: 'San Lorenzo', territorio: 'T25', conductor: 'Ana M.' },
+    { id: 'preview-d3', grupo: 'G2', lugar: 'Hospital', territorio: 'T18', conductor: 'Jorge P.' },
+  ] },
+]
+
+export default function ProgramGenerator({ preview = false }) {
+  const [salidas, setSalidas] = useState(() => preview ? previewSalidas() : [salidaVacia()])
   const [syncState, setSyncState] = useState('cargando')
   const loaded = useRef(false)
   const applyingRemote = useRef(false)
 
-  useEffect(() => subscribeProgramDraft((remote) => {
+  useEffect(() => {
+    if (preview) { loaded.current = true; setSyncState('guardado'); return undefined }
+    return subscribeProgramDraft((remote) => {
     loaded.current = true
     if (remote !== null) setSalidas((current) => {
       if (JSON.stringify(remote) === JSON.stringify(current)) return current
@@ -117,10 +127,11 @@ export default function ProgramGenerator() {
     console.error('Sincronización del programa:', error)
     loaded.current = true
     setSyncState('error')
-  }), []) // cargar una vez; los cambios posteriores llegan por el listener
+    })
+  }, [preview]) // cargar una vez; los cambios posteriores llegan por el listener
 
   useEffect(() => {
-    if (!loaded.current) return
+    if (!loaded.current || preview) return
     if (applyingRemote.current) { applyingRemote.current = false; return }
     setSyncState('guardando')
     const timer = setTimeout(() => {
@@ -129,7 +140,7 @@ export default function ProgramGenerator() {
         .catch((error) => { console.error('Guardado del programa:', error); setSyncState('error') })
     }, 650)
     return () => clearTimeout(timer)
-  }, [salidas])
+  }, [salidas, preview])
 
   const patchSalida = (id, patch) => setSalidas((all) => all.map((s) => s.id === id ? { ...s, ...patch } : s))
   const patchDetalle = (salidaId, detalleId, patch) => setSalidas((all) => all.map((s) => s.id !== salidaId ? s : {

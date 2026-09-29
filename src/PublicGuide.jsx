@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { IconChart, IconMap, IconPath } from './icons.jsx'
+import { IconAdmin, IconChart, IconMap, IconPath } from './icons.jsx'
 
 const GuideSection = ({ icon, title, preview, children }) => <section className="guide-section">
   <div className="guide-section-title">{icon}<h3>{title}</h3></div>
@@ -7,7 +7,7 @@ const GuideSection = ({ icon, title, preview, children }) => <section className=
   <ul>{children}</ul>
 </section>
 
-export default function PublicGuide({ campaignVisible, metricsVisible, onClose }) {
+export default function PublicGuide({ campaignVisible, metricsVisible, adminVisible, onClose }) {
   useEffect(() => {
     const closeOnEscape = (event) => event.key === 'Escape' && onClose()
     window.addEventListener('keydown', closeOnEscape)
@@ -37,6 +37,25 @@ export default function PublicGuide({ campaignVisible, metricsVisible, onClose }
           <li>Compara los resultados por zona.</li>
           <li>Puede estar oculta según la configuración.</li>
         </GuideSection>}
+        {adminVisible && <div className="guide-admin-block">
+          <div className="guide-admin-heading"><IconAdmin /><div><h3>Administración</h3><p>Herramientas disponibles únicamente para administradores.</p></div></div>
+          <GuideSection title="Registros" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-registros.png" alt="Vista real de la administración de registros con datos de ejemplo" />}>
+            <li>Activá o cerrá un territorio indicando las fechas de inicio y fin.</li>
+            <li>Usá los filtros para encontrar territorios completados o todavía activos.</li>
+            <li>En un territorio activo podés definir qué manzanas quedan disponibles.</li>
+            <li>Los cambios se aplican recién al presionar <b>Guardar</b>.</li>
+          </GuideSection>
+          <GuideSection title="Generar programa" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-programa.png" alt="Vista real del generador de programa con datos de ejemplo" />}>
+            <li>Completá día, horario, lugar, territorio y conductor de cada salida.</li>
+            <li>Marcá <b>Salida por grupos</b> para organizar varios grupos bajo un mismo horario.</li>
+            <li>El borrador se comparte entre administradores y se descarga con <b>Descargar PNG</b>.</li>
+          </GuideSection>
+          <GuideSection title="Administradores" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-administradores.png" alt="Vista real de la gestión de administradores con datos de ejemplo" />}>
+            <li>Agregá el correo de las personas que tendrán acceso administrativo.</li>
+            <li>Podés quitar accesos existentes; la cuenta principal y tu propia cuenta están protegidas.</li>
+            <li><b>Cerrar sesión</b> vuelve a la experiencia pública.</li>
+          </GuideSection>
+        </div>}
       </div>
     </div>
   </div>

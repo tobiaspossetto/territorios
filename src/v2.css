@@ -142,6 +142,13 @@
   display: block; width: 100%; height: auto; border: 1px solid var(--stroke); border-radius: 14px;
   background: #fffdfa; object-fit: contain;
 }
+.app-v2 .guide-admin-block { margin-top: 26px; padding-top: 24px; border-top: 2px solid var(--brand-orange); }
+.app-v2 .guide-admin-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 20px; }
+.app-v2 .guide-admin-heading > svg { width: 24px; height: 24px; padding: 7px; box-sizing: content-box; border-radius: 10px; color: #fff; background: var(--brand-orange); }
+.app-v2 .guide-admin-heading h3 { margin: 0; font-size: 19px; }
+.app-v2 .guide-admin-heading p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.app-v2 .guide-admin-block .guide-section + .guide-section { margin-top: 20px; padding-top: 20px; }
+.app-v2 .guide-preview-admin { aspect-ratio: 1.385 / 1; object-fit: cover; object-position: top; }
 
 .app-v2 .search-fab {
   background: var(--panel); color: var(--txt); border-color: var(--stroke);
@@ -344,6 +351,10 @@
   .app-v2 .guide-section-title h3 { font-size: 15px; }
   .app-v2 .guide-section-title svg { width: 19px; height: 19px; }
   .app-v2 .guide-preview { height: auto; border-radius: 12px; }
+  .app-v2 .guide-admin-block { margin-top: 20px; padding-top: 18px; }
+  .app-v2 .guide-admin-heading { margin-bottom: 15px; }
+  .app-v2 .guide-admin-heading h3 { font-size: 17px; }
+  .app-v2 .guide-admin-heading p { font-size: 10px; }
   .app-v2 .guide-section ul { margin-top: 9px; gap: 4px; font-size: 10.5px; }
 
   .app-v2 .search-fab {

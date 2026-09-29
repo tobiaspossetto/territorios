@@ -24,6 +24,7 @@ export default function AdminPanel({
   data, manzanas, registroBase, onSave, onLogout, onClose,
   onCampModoChange, campModoOn, metricsVisible, onMetricsVisibleChange,
   initialQuery, syncError, currentEmail, theme, onThemeToggle,
+  preview = false,
 }) {
   const [view, setView] = useState('registros')
   const [q, setQ] = useState(initialQuery || '')
@@ -180,7 +181,7 @@ export default function AdminPanel({
           </nav>
           <div className="admin-view">
             {view === 'registros' && <div className="admin-panel-sub"><span className={'admin-sync-dot' + (dirty ? ' dirty' : '')} />{draft.length} registros · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'sincronizado'}</div>}
-            {view === 'programa' ? <ProgramGenerator /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} /> : <>
+            {view === 'programa' ? <ProgramGenerator preview={preview} /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} preview={preview} /> : <>
           <div className="admin-record-tools">
             <div className="admin-public-settings">
               <div className="admin-campmode">

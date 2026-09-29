@@ -166,15 +166,18 @@ export default function AdminPanel({
               <button className="search-x" onClick={pedirCierre} aria-label="Cerrar">×</button>
             </div>
           </div>
-          <div className="admin-tabs">
-            <button className={view === 'registros' ? 'on' : ''} onClick={() => setView('registros')}>Registros</button>
-            <button className={view === 'programa' ? 'on' : ''} onClick={() => setView('programa')}><span className="tab-wide">Generar programa</span><span className="tab-short">Programa</span></button>
-            <button className={view === 'admins' ? 'on' : ''} onClick={() => setView('admins')}><span className="tab-wide">Administradores</span><span className="tab-short">Admins</span></button>
-          </div>
-          {view === 'registros' && <div className="admin-panel-sub"><span className={'admin-sync-dot' + (dirty ? ' dirty' : '')} />{draft.length} registros · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'sincronizado'}</div>}
         </div>
 
-        {view === 'programa' ? <ProgramGenerator /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} /> : <>
+        <div className="admin-workspace">
+          <nav className="admin-tabs" aria-label="Secciones de administración">
+            <span className="admin-tabs-label">Gestión</span>
+            <button className={view === 'registros' ? 'on' : ''} onClick={() => setView('registros')}><span className="admin-nav-icon">▤</span><span>Registros</span></button>
+            <button className={view === 'programa' ? 'on' : ''} onClick={() => setView('programa')}><span className="admin-nav-icon">▦</span><span className="tab-wide">Generar programa</span><span className="tab-short">Programa</span></button>
+            <button className={view === 'admins' ? 'on' : ''} onClick={() => setView('admins')}><span className="admin-nav-icon">♙</span><span className="tab-wide">Administradores</span><span className="tab-short">Admins</span></button>
+          </nav>
+          <div className="admin-view">
+            {view === 'registros' && <div className="admin-panel-sub"><span className={'admin-sync-dot' + (dirty ? ' dirty' : '')} />{draft.length} registros · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'sincronizado'}</div>}
+            {view === 'programa' ? <ProgramGenerator /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} /> : <>
           <div className="admin-record-tools">
             <div className="admin-public-settings">
               <div className="admin-campmode">
@@ -235,7 +238,9 @@ export default function AdminPanel({
             </tbody>
           </table></div>
           {(errorS13 || saveError || syncError) && <div className="admin-export-error">{errorS13 || saveError || syncError}</div>}
-        </>}
+            </>}
+          </div>
+        </div>
       </div>
     </div>
   )

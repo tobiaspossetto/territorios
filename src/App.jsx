@@ -184,9 +184,10 @@ export default function App() {
   const [bordeCalles, setBordeCalles] = useState(null)
   const [splash, setSplash] = useState(true)
   const [splashOut, setSplashOut] = useState(false)
-  const [adminUser, setAdminUser] = useState(null)
+  const adminPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('adminPreview')
+  const [adminUser, setAdminUser] = useState(() => adminPreview ? { email: 'preview@local.test' } : null)
   const [showLogin, setShowLogin] = useState(false)
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [showAdminPanel, setShowAdminPanel] = useState(adminPreview)
   const [showGuide, setShowGuide] = useState(false)
   const [adminInitialQuery, setAdminInitialQuery] = useState('')
   const [registroBase, setRegistroBase] = useState([])
@@ -279,13 +280,14 @@ export default function App() {
   }, [hideSplash])
 
   useEffect(() => {
+    if (adminPreview) return undefined
     let revision = 0
     return observeAuth(async (user) => {
       const current = ++revision
       const allowed = user ? await isAuthorizedAdmin(user) : false
       if (current === revision) setAdminUser(allowed ? user : null)
     })
-  }, [])
+  }, [adminPreview])
 
   useEffect(() => subscribePublicState(({ summaries, campaignMode, metricsVisible: showMetrics }) => {
     setPublicSummaries(summaries)

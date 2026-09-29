@@ -934,3 +934,124 @@ body {
   .admin-panel.theme-light .admin-table-wrap { background: rgba(54,47,43,.025); }
   .admin-panel.theme-light .admin-table thead { background: rgba(245,243,240,.97); }
 }
+
+/* Rediseño de Administración: navegación Fiori y superficie de trabajo por tarjetas. */
+.admin-workspace { min-height: 0; flex: 1; display: flex; }
+.admin-view { min-width: 0; min-height: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.admin-tabs-label { display: none; }
+.admin-nav-icon { display: none; width: 22px; text-align: center; font-size: 17px; line-height: 1; }
+
+@media (min-width: 721px) {
+  .admin-panel {
+    width: min(1220px, calc(100vw - 56px)); max-width: 1220px;
+    height: min(850px, calc(100dvh - 48px));
+    border-radius: 20px;
+  }
+  .admin-panel-head {
+    padding: 18px 24px; background: color-mix(in srgb, var(--panel) 96%, transparent);
+  }
+  .admin-panel-title { font-size: 22px; letter-spacing: -.025em; }
+  .admin-panel-hbtns .search-x, .admin-head-save { min-height: 40px; height: 40px; }
+  .admin-panel-hbtns .search-x { width: 40px; }
+
+  .admin-tabs {
+    width: 224px; max-width: none; flex: 0 0 224px; align-self: stretch;
+    display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 26px 16px;
+    border-right: 1px solid var(--stroke); border-radius: 0;
+    background: color-mix(in srgb, var(--panel) 94%, var(--track));
+  }
+  .admin-tabs-label {
+    display: block; margin: 0 12px 9px; color: var(--muted);
+    font-size: 9px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  }
+  .admin-tabs button {
+    width: 100%; min-height: 46px; padding: 0 14px; display: flex; align-items: center; gap: 11px;
+    border: 0; border-radius: 11px; background: transparent; text-align: left;
+  }
+  .admin-tabs button.on {
+    color: #fff; background: #ed7100; box-shadow: 0 8px 22px rgba(237,113,0,.2);
+  }
+  .admin-nav-icon { display: inline-block; }
+  .admin-panel-sub { margin: 0; padding: 16px 24px 0; font-size: 11px; }
+
+  .admin-record-tools {
+    width: auto; max-width: none; margin: 14px 24px 12px;
+    grid-template-columns: minmax(0, 1fr); gap: 12px;
+  }
+  .admin-public-settings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .admin-campmode {
+    min-height: 72px; padding: 12px 16px; border-radius: 14px;
+    background: color-mix(in srgb, var(--track) 84%, transparent);
+    box-shadow: 0 5px 18px rgba(0,0,0,.045);
+  }
+  .admin-campmode-label { font-size: 13px; }
+  .admin-campmode-sub { display: block; max-width: none; }
+  .admin-search { width: min(540px, 100%); min-height: 44px; }
+  .admin-search input { min-height: 42px; }
+  .admin-filtros { width: auto; max-width: none; margin: 0 24px 12px; align-items: center; }
+  .admin-filtro-btn { min-height: 36px; padding: 0 15px; }
+  .admin-add-terr { width: 82px; min-height: 36px; }
+  .admin-add-row .admin-mini-btn { min-height: 36px; }
+  .admin-add-error { margin-left: 24px; margin-right: 24px; }
+
+  .admin-editor-card {
+    width: auto; max-width: none; margin: 0 24px 14px; padding: 16px 18px;
+    border-radius: 16px; background: color-mix(in srgb, var(--track) 82%, transparent);
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  }
+  .admin-accordion-head > strong { font-size: 16px; }
+  .admin-accordion-grid { grid-template-columns: 150px 110px 220px 220px; gap: 14px; }
+  .admin-accordion-grid select, .admin-accordion-grid .admin-c-btn, .admin-accordion-grid .aria-field-control {
+    min-height: 42px; height: 42px;
+  }
+  .admin-manzanas-field { margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--stroke); }
+
+  .admin-table-wrap {
+    width: auto; max-width: none; margin: 0 24px 20px; padding: 0;
+    border: 1px solid var(--stroke); border-radius: 15px;
+    background: color-mix(in srgb, var(--track) 74%, transparent); overflow: auto;
+  }
+  .admin-table { font-size: 13px; }
+  .admin-table thead { position: sticky; top: 0; z-index: 2; background: var(--panel); }
+  .admin-table th { padding: 13px 16px 10px; }
+  .admin-table td { height: 43px; padding: 7px 16px; }
+  .admin-table tbody tr:hover td { background: color-mix(in srgb, var(--accent2) 8%, transparent); }
+
+  .programa-intro, .programa-list { width: auto; max-width: none; margin-left: 24px; margin-right: 24px; }
+  .programa-intro { padding: 20px 0 12px; }
+  .programa-intro b { font-size: 20px; }
+  .programa-card {
+    max-width: none; padding: 16px 18px; border-radius: 16px;
+    background: color-mix(in srgb, var(--track) 80%, transparent); box-shadow: 0 7px 20px rgba(0,0,0,.05);
+  }
+  .programa-main-fields { grid-template-columns: 220px 180px; }
+  .programa-actions { padding-left: 24px; padding-right: 24px; }
+
+  .admin-users-intro, .admin-users-add, .admin-users-list { width: auto; max-width: none; margin-left: 24px; margin-right: 24px; }
+  .admin-users-intro { padding-top: 22px; }
+  .admin-users-intro b { font-size: 20px; }
+  .admin-users-add {
+    padding: 14px; border: 1px solid var(--stroke); border-radius: 14px;
+    background: color-mix(in srgb, var(--track) 80%, transparent);
+  }
+  .admin-users-list {
+    margin-top: 14px; padding: 0 16px; border: 1px solid var(--stroke); border-radius: 14px;
+    background: color-mix(in srgb, var(--track) 74%, transparent);
+  }
+  .admin-user-row { min-height: 58px; padding: 9px 2px; }
+  .admin-users-foot { padding-left: 24px; padding-right: 24px; }
+}
+
+@media (max-width: 720px) {
+  .admin-workspace { flex-direction: column; }
+  .admin-tabs {
+    flex: none; width: auto; margin: 8px 12px 0; padding: 3px;
+    display: flex; flex-direction: row; gap: 3px; border-radius: 11px; background: var(--track);
+  }
+  .admin-tabs-label, .admin-nav-icon { display: none; }
+  .admin-tabs button {
+    flex: 1; min-width: 0; min-height: 36px; padding: 0 5px; border: 0; border-radius: 8px;
+    justify-content: center; font-size: 10.5px;
+  }
+  .admin-panel-sub { margin: 6px 12px 0; padding: 0; }
+}

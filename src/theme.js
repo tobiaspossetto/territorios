@@ -9,6 +9,12 @@ export const COLORS = {
   fill: '#d4af37', fillOpacity: 0.2, stroke: '#8a6a12', glow: '#d4af37', neon: false,
   coreWidth: 2, glowWidth: 0, glowBlur: 0, label: '#4a3a08', labelHalo: '#ffffff',
 }
+// Mapa general: arena suave para conservar calles y edificios legibles.
+// Campaña mantiene la paleta dorada más intensa definida en COLORS.
+export const MAP_COLORS = {
+  fill: '#d8c89b', fillOpacity: 0.14, stroke: '#a28d52',
+  activeFill: '#e5c47f', activeFillOpacity: 0.22, activeStroke: '#c88732',
+}
 export const COLORS_HECHO = {
   fill: '#2e9e5b', fillOpacity: 0.22, stroke: '#1f6e3f', glow: '#2e9e5b', neon: false,
   coreWidth: 2.2, glowWidth: 0, glowBlur: 0, label: '#1c4a2c', labelHalo: '#ffffff',

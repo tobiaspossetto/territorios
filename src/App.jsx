@@ -3,7 +3,7 @@ import Map, { Source, Layer, NavigationControl, GeolocateControl } from 'react-m
 import maplibregl from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { MAP_STYLE, COLORS, COLORS_HECHO, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
+import { MAP_STYLE, COLORS, COLORS_HECHO, MAP_COLORS, MAPTILER_KEY, metricFillExpr, offlineStyle } from './theme.js'
 import MetricaPanel from './MetricaPanel.jsx'
 import PublicGuide from './PublicGuide.jsx'
 import Splash from './Splash.jsx'
@@ -525,6 +525,7 @@ export default function App() {
   // esos necesitan una expresión de MapLibre que lea la propiedad por feature.
   const c = COLORS
   const ch = COLORS_HECHO
+  const cm = MAP_COLORS
   const selFeat = isCamp && selected && terrView ? terrView.features.find(f => f.properties.territorio === selected) : null
   const selHecho = !!(selFeat && selFeat.properties.campania_hecho)
   const sel = selected || '__none__'
@@ -546,9 +547,9 @@ export default function App() {
   // marcados a la vez, cada uno con su propio estado
   const campFillExpr = ['case', ['==', ['get', 'campania_hecho'], true], ch.fill, c.fill]
   const campStrokeExpr = ['case', ['==', ['get', 'campania_hecho'], true], ch.stroke, c.stroke]
-  const normalFillExpr = ['case', ['==', ['get', 'activo'], true], '#e6b52f', c.fill]
-  const normalFillOpacityExpr = ['case', ['==', ['get', 'activo'], true], 0.32, c.fillOpacity]
-  const normalStrokeExpr = ['case', ['==', ['get', 'activo'], true], '#ed7100', c.stroke]
+  const normalFillExpr = ['case', ['==', ['get', 'activo'], true], cm.activeFill, cm.fill]
+  const normalFillOpacityExpr = ['case', ['==', ['get', 'activo'], true], cm.activeFillOpacity, cm.fillOpacity]
+  const normalStrokeExpr = ['case', ['==', ['get', 'activo'], true], cm.activeStroke, cm.stroke]
   const normalStrokeWidthExpr = ['case', ['==', ['get', 'activo'], true], 3, c.coreWidth]
   const terrFill = {
     id: 'terr-fill', type: 'fill',
@@ -621,7 +622,7 @@ export default function App() {
   // --- capa MANZANAS ---
   const manzFillSel = {
     id: 'manz-fill-sel', type: 'fill', filter: ['==', ['get', 'territorio'], sel],
-    paint: { 'fill-color': isCamp && selHecho ? ch.fill : c.fill, 'fill-opacity': 0.16 },
+    paint: { 'fill-color': isCamp ? (selHecho ? ch.fill : c.fill) : cm.fill, 'fill-opacity': isCamp ? 0.16 : 0.12 },
   }
   const manzLine = {
     id: 'manz-line', type: 'line',

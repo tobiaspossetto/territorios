@@ -641,18 +641,18 @@ export default function App() {
   }
   const tachFill = {
     id: 'manz-tach-fill', type: 'fill',
-    paint: { 'fill-color': '#d32f2f', 'fill-opacity': 0.34 },
+    paint: { 'fill-color': '#d98282', 'fill-opacity': 0.24 },
   }
   const tachLine = {
     id: 'manz-tach-line', type: 'line',
-    paint: { 'line-color': '#b71c1c', 'line-width': 1.6, 'line-opacity': 0.9 },
+    paint: { 'line-color': '#b85c5c', 'line-width': 1.5, 'line-opacity': 0.78 },
   }
   // la X ocupa la manzana entera (diagonales dibujadas como líneas)
   const tachXHalo = {
     id: 'manz-tach-x-halo', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': 'rgba(255,255,255,.8)',
+      'line-color': 'rgba(255,255,255,.65)',
       'line-width': ['interpolate', ['linear'], ['zoom'], 13, 4, 17, 8],
     },
   }
@@ -660,8 +660,8 @@ export default function App() {
     id: 'manz-tach-x', type: 'line',
     layout: { 'line-cap': 'round' },
     paint: {
-      'line-color': '#e02020',
-      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 2.2, 17, 5],
+      'line-color': '#c65f5f',
+      'line-width': ['interpolate', ['linear'], ['zoom'], 13, 2, 17, 4.5],
     },
   }
 

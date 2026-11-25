@@ -1,0 +1,29 @@
+.app-v2.theme-light .splash.collage-splash { --collage-ink:#783c18; --collage-track:#e8ddd0; background:#fdfdfb; color:var(--collage-ink); color-scheme:only light; }
+.app-v2.theme-dark .splash.collage-splash { --collage-ink:#e8d9bf; --collage-track:#444038; background:#1e1c19; color:var(--collage-ink); color-scheme:only dark; }
+.collage-center { width:min(100% - 40px,360px); text-align:center; }
+.collage-frame { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; opacity:0; }
+.collage-sequence { --scene-size:min(62vw,32dvh,240px); position:relative; width:100%; height:var(--scene-size); }
+.collage-art { display:block; width:var(--scene-size); height:var(--scene-size); object-fit:contain; flex:none; }
+.collage-sequence.is-ready:not(.is-reduced) .collage-frame { animation:collage-frame-show .8s ease both; }
+.collage-sequence.is-paused .collage-frame { animation-play-state:paused!important; }
+.collage-brand { margin-top:24px; }
+.collage-brand .splash-title { font-size:clamp(24px,7vw,40px); }
+.collage-progress { width:136px; height:4px; margin:24px auto 0; background:var(--dp-border,var(--collage-track,#ddd)); overflow:hidden; border-radius:4px; }
+.collage-progress span { display:block; width:100%; height:100%; background:var(--dp-accent,var(--collage-ink,#725398)); border-radius:inherit; transform-origin:left center; animation:collage-progress 2s linear both; }
+.collage-progress.is-complete span { animation:none; width:100%; transform:none; }
+.splash.splash-complete.out { opacity:1; pointer-events:auto; }
+@keyframes collage-progress { from { transform:scaleX(0); } to { transform:scaleX(.95); } }
+.collage-slow { font-size:13px; margin-top:18px; }
+.collage-slow button { min-height:44px; }
+@keyframes collage-frame-show { 0% { opacity:0; transform:translateY(8px) scale(.94) rotate(-2deg); } 22%,70% { opacity:1; transform:none; } 100% { opacity:0; transform:translateY(-5px) scale(1.04) rotate(1deg); } }
+@media(prefers-reduced-motion:reduce) { .collage-frame,.collage-progress span { animation:none!important; } .collage-frame { opacity:1; transform:none!important; } .collage-progress:not(.is-complete) span { transform:scaleX(.95); } }
+/* Local-only contact sheet for inspecting every illustration, never used by the published welcome. */
+.splash.collage-gallery { display:block; overflow:auto; padding:24px; box-sizing:border-box; }
+.collage-gallery .collage-center { width:min(100%,1100px); margin:auto; }
+.collage-gallery .collage-sequence { height:auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:20px; }
+.collage-gallery .collage-frame { position:relative; height:190px; opacity:1; animation:none!important; flex-direction:column; gap:8px; }
+.collage-gallery .collage-art { flex:none; --scene-size:160px; }
+.collage-gallery small { position:absolute; bottom:0; font-size:12px; }
+@media(max-width:600px) { .collage-gallery .collage-sequence { grid-template-columns:repeat(2,minmax(0,1fr)); } .collage-gallery .collage-frame { height:175px; } .collage-gallery .collage-art { --scene-size:130px; } }
+
+.collage-sequence.is-reduced .collage-frame { opacity:1; animation:none; }

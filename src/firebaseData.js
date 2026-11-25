@@ -3,15 +3,27 @@ import {
   signInWithPopup, signOut,
 } from 'firebase/auth'
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot,
-  orderBy, query, setDoc, updateDoc, where, writeBatch,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, getDocFromServer, getDocsFromServer, onSnapshot,
+  orderBy, query, runTransaction, setDoc, updateDoc, where, writeBatch,
 } from 'firebase/firestore'
-import { firebaseAuth, firestore } from './firebase.js'
+import { firebaseAuth, firestore, firebaseWritesBlocked, assertFirebaseWritable } from './firebase.js'
+import { buildPublicProgramAssignments, validPinCoordinates, firstProgramTerritory } from './programAssignments.js'
+import { mergeProgramDraft } from './programDraftMerge.js'
+import {metricServiceYear, serviceCompletionCount} from './metricFrequency.js'
+import {lastTerritoryVisit} from './lastTerritoryVisit.js'
+import {normalizeProgramWeekStart} from './programWeeks.js'
+import {normalizeSplashType} from './splashType.js'
+import {readPublicStateCache,writePublicStateCache} from './publicStateCache.js'
 
 const ADMIN_EMAIL = (import.meta.env.VITE_FIREBASE_ADMIN_EMAIL || '').toLowerCase()
 
 function assertFirebase() {
   if (!firebaseAuth || !firestore) throw new Error('Firebase no está configurado.')
+}
+
+function assertWritableFirebase() {
+  assertFirebaseWritable()
+  assertFirebase()
 }
 
 export function observeAuth(callback) {
@@ -67,7 +79,7 @@ export function subscribeAdminEmails(onData, onError) {
 }
 
 export async function addAdminEmail(value) {
-  assertFirebase()
+  assertWritableFirebase()
   const email = String(value || '').trim().toLowerCase()
   if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error('invalid-email')
   await setDoc(doc(firestore, 'adminEmails', email), {
@@ -76,7 +88,7 @@ export async function addAdminEmail(value) {
 }
 
 export async function removeAdminEmail(value) {
-  assertFirebase()
+  assertWritableFirebase()
   const email = String(value || '').trim().toLowerCase()
   await deleteDoc(doc(firestore, 'adminEmails', email))
 }
@@ -90,29 +102,86 @@ export function subscribeRecords(onData, onError) {
 }
 
 export function subscribePublicState(onData, onError) {
-  if (!firestore) { onData({ summaries: {}, campaignMode: false, metricsVisible: true }); return () => {} }
-  let summaries = {}
-  let campaignMode = false
-  let metricsVisible = true
-  const emit = () => onData({ summaries, campaignMode, metricsVisible })
-  const stopTerr = onSnapshot(collection(firestore, 'territoriosPublicos'), (snap) => {
+  if (!firestore) { onData({ summaries: {}, campaignMode: false, metricsVisible: true, programAssignments: [], programWeekStart: 0, splashType:'collage' }); return () => {} }
+  const cacheKey=`territorios-public-v1:${import.meta.env.VITE_FIREBASE_PROJECT_ID}`
+  const cached=readPublicStateCache(cacheKey)
+  let summaries = cached?.summaries || {}
+  let campaignMode = cached?.campaignMode === true
+  let metricsVisible = cached?.metricsVisible !== false
+  let programAssignments = cached?.programAssignments || []
+  let programWeekStart = normalizeProgramWeekStart(cached?.programWeekStart)
+  let splashType = normalizeSplashType(cached?.splashType)
+  let configReady = !!cached
+  let stopped=false,refreshing=false,serverRevision=0
+  const territoriesRef=collection(firestore,'territoriosPublicos')
+  const configRef=doc(firestore,'config','public')
+  // Las banderas no dependen de terminar la consulta de todos los registros.
+  const emit = () => {
+    if(!configReady)return
+    const state={summaries,campaignMode,metricsVisible,programAssignments,programWeekStart,splashType}
+    writePublicStateCache(cacheKey,state)
+    onData(state)
+  }
+  // Restore before starting the network listeners, including a cold offline start.
+  if(cached)onData({summaries,campaignMode,metricsVisible,programAssignments,programWeekStart,splashType})
+  const applyConfig=snap=>{
+    const value=snap.data()
+    campaignMode=value?.campaignMode===true
+    metricsVisible=value?.metricsVisible!==false
+    programAssignments=Array.isArray(value?.programAssignments)?value.programAssignments:[]
+    programWeekStart=normalizeProgramWeekStart(value?.programWeekStart)
+    splashType=normalizeSplashType(value?.splashType)
+    configReady=true
+  }
+  const stopTerr = onSnapshot(territoriesRef, {includeMetadataChanges:true}, (snap) => {
+    // An empty SDK memory cache is not a deletion of the last public snapshot.
+    if(snap.metadata.fromCache&&snap.empty)return
+    if(!snap.metadata.fromCache)serverRevision++
     summaries = Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]))
     emit()
   }, onError)
-  const stopConfig = onSnapshot(doc(firestore, 'config', 'public'), (snap) => {
-    campaignMode = snap.exists() && snap.data().campaignMode === true
-    // Por compatibilidad, las instalaciones que todavía no tengan este campo
-    // mantienen la Métrica visible para todos.
-    metricsVisible = !snap.exists() || snap.data().metricsVisible !== false
+  const stopConfig = onSnapshot(configRef, {includeMetadataChanges:true}, (snap) => {
+    if(snap.metadata.fromCache&&!snap.exists())return
+    if(!snap.metadata.fromCache)serverRevision++
+    applyConfig(snap)
     emit()
   }, onError)
-  return () => { stopTerr(); stopConfig() }
+  const refresh=async()=>{
+    if(stopped||refreshing||document.hidden||!navigator.onLine)return
+    refreshing=true
+    const revision=serverRevision
+    try {
+      const [territories,config]=await Promise.all([getDocsFromServer(territoriesRef),getDocFromServer(configRef)])
+      // A newer live snapshot takes precedence over an earlier refresh request.
+      if(stopped||revision!==serverRevision)return
+      summaries=Object.fromEntries(territories.docs.map(record=>[record.id,record.data()]))
+      applyConfig(config)
+      emit()
+    } catch { /* Keep the last public copy until a server can be reached. */ }
+    finally {refreshing=false}
+  }
+  window.addEventListener('online',refresh)
+  window.addEventListener('focus',refresh)
+  document.addEventListener('visibilitychange',refresh)
+  return () => {
+    stopped=true;stopTerr();stopConfig()
+    window.removeEventListener('online',refresh)
+    window.removeEventListener('focus',refresh)
+    document.removeEventListener('visibilitychange',refresh)
+  }
+}
+
+// One-shot, read-only copy for local QA. Never invokes migrations or record writes.
+export async function readPublicMetricSnapshot() {
+  assertFirebase()
+  const snap = await getDocs(collection(firestore, 'territoriosPublicos'))
+  return Object.fromEntries(snap.docs.map(d => [d.id, d.data()]))
 }
 
 function summary(rows) {
   const completas = rows.filter((r) => r.inicio && r.fin)
   const now = new Date()
-  const serviceYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  const serviceYear = metricServiceYear(now)
   const vecesPorAnoServicio = completas.reduce((counts, record) => {
     const [year, month] = record.fin.split('-').map(Number)
     const key = String(month >= 9 ? year : year - 1)
@@ -121,6 +190,7 @@ function summary(rows) {
   }, {})
   const ultima = completas.map((r) => r.fin).sort().slice(-1)[0] || null
   const primera = completas.map((r) => r.fin).sort()[0] || null
+  const primeraInicio = completas.map((r) => r.inicio).sort()[0] || null
   const campania = rows.filter((r) => r.campania)
   const activa = rows.filter((r) => r.inicio && !r.fin).sort((a, b) => (b.createdOrder || 0) - (a.createdOrder || 0))[0]
   return {
@@ -128,7 +198,9 @@ function summary(rows) {
     vecesServicio: vecesPorAnoServicio[String(serviceYear)] || 0,
     vecesPorAnoServicio,
     primera,
+    primeraInicio,
     ultima,
+    ultimaVisita: lastTerritoryVisit(rows),
     activo: !!activa,
     campania: campania.length > 0,
     campaniaHecho: campania.length > 0 && campania.every((r) => !!r.inicio && !!r.fin),
@@ -137,17 +209,19 @@ function summary(rows) {
 }
 
 async function recomputeTerritory(territorio) {
+  assertWritableFirebase()
   if (!territorio) return
   const snap = await getDocs(query(collection(firestore, 'registros'), where('territorio', '==', territorio)))
   await setDoc(doc(firestore, 'territoriosPublicos', territorio), summary(snap.docs.map((d) => d.data())))
 }
 
 // Completa una sola vez los resúmenes públicos antiguos con los campos que
-// necesita el mapa (estado activo y manzanas configuradas). Se ejecuta al
+// necesita el mapa, incluida la última visita empezada. Se ejecuta al
 // entrar un administrador y queda registrada para no repetir escrituras.
 export async function ensurePublicMapSummary(records) {
-  assertFirebase()
-  const migrationRef = doc(firestore, 'migrations', 'public-map-summary-v2')
+  if(firebaseWritesBlocked)return
+  assertWritableFirebase()
+  const migrationRef = doc(firestore, 'migrations', 'public-map-summary-v3')
   if ((await getDoc(migrationRef)).exists()) return
   const grouped = new Map()
   for (const record of records || []) {
@@ -159,12 +233,12 @@ export async function ensurePublicMapSummary(records) {
   for (const [territorio, rows] of grouped) {
     batch.set(doc(firestore, 'territoriosPublicos', territorio), summary(rows))
   }
-  batch.set(migrationRef, { completedAt: Date.now(), version: 2 })
+  batch.set(migrationRef, { completedAt: Date.now(), version: 3 })
   await batch.commit()
 }
 
 export async function addRecord(territorio) {
-  assertFirebase()
+  assertWritableFirebase()
   await addDoc(collection(firestore, 'registros'), {
     territorio,
     inicio: new Date().toISOString().slice(0, 10),
@@ -177,14 +251,14 @@ export async function addRecord(territorio) {
 }
 
 export async function updateRecord(record, field, value) {
-  assertFirebase()
+  assertWritableFirebase()
   await updateDoc(doc(firestore, 'registros', record.id), { [field]: value, updatedAt: Date.now() })
   await recomputeTerritory(record.territorio)
   if (field === 'territorio' && value !== record.territorio) await recomputeTerritory(value)
 }
 
 export async function removeRecord(record) {
-  assertFirebase()
+  assertWritableFirebase()
   await deleteDoc(doc(firestore, 'registros', record.id))
   await recomputeTerritory(record.territorio)
 }
@@ -192,7 +266,7 @@ export async function removeRecord(record) {
 // Guarda de una sola vez todos los cambios preparados en la tabla admin.
 // Así editar un campo no modifica Firebase hasta pulsar "Guardar cambios".
 export async function saveRecordChanges({ created = [], updated = [], deleted = [] }) {
-  assertFirebase()
+  assertWritableFirebase()
   const batch = writeBatch(firestore)
   const affected = new Set()
 
@@ -234,13 +308,25 @@ export async function saveRecordChanges({ created = [], updated = [], deleted = 
 }
 
 export async function setCampaignMode(campaignMode) {
-  assertFirebase()
+  assertWritableFirebase()
   await setDoc(doc(firestore, 'config', 'public'), { campaignMode, updatedAt: Date.now() }, { merge: true })
 }
 
 export async function setMetricsVisible(metricsVisible) {
-  assertFirebase()
+  assertWritableFirebase()
   await setDoc(doc(firestore, 'config', 'public'), { metricsVisible, updatedAt: Date.now() }, { merge: true })
+}
+
+export async function setProgramWeekStart(programWeekStart) {
+  assertWritableFirebase()
+  if (normalizeProgramWeekStart(programWeekStart) !== programWeekStart) throw new Error('invalid-week-start')
+  await setDoc(doc(firestore, 'config', 'public'), {programWeekStart, updatedAt:Date.now()}, {merge:true})
+}
+
+export async function setSplashType(splashType) {
+  assertWritableFirebase()
+  if(!['auto','collage'].includes(splashType))throw new Error('invalid-splash-type')
+  await setDoc(doc(firestore,'config','public'),{splashType,updatedAt:Date.now()},{merge:true})
 }
 
 // Borrador privado y compartido del generador de programa.
@@ -252,12 +338,44 @@ export function subscribeProgramDraft(onData, onError) {
   }, onError)
 }
 
-export async function saveProgramDraft(salidas) {
-  assertFirebase()
-  await setDoc(doc(firestore, 'config', 'programa'), {
-    salidas,
-    updatedAt: Date.now(),
-    updatedBy: firebaseAuth.currentUser?.email || '',
+export async function saveProgramDraft(salidas, baseSalidas = salidas) {
+  assertWritableFirebase()
+  await runTransaction(firestore, async transaction => {
+    const ref=doc(firestore,'config','programa')
+    const snapshot=await transaction.get(ref)
+    const updated=mergeProgramDraft(snapshot.data()?.salidas||[],salidas,baseSalidas)
+    transaction.set(ref, {
+      salidas:updated,
+      updatedAt:Date.now(),
+      updatedBy:firebaseAuth.currentUser?.email||'',
+    })
+    transaction.set(doc(firestore,'config','public'),{programAssignments:buildPublicProgramAssignments(updated),updatedAt:Date.now()},{merge:true})
+  })
+}
+
+export async function saveAssignmentPosition(assignment, coordinates, { expectedCoordinates } = {}) {
+  assertWritableFirebase()
+  if (!validPinCoordinates(coordinates)) throw new Error('Ubicación inválida')
+  await runTransaction(firestore, async transaction => {
+    const ref = doc(firestore, 'config', 'programa')
+    const snapshot = await transaction.get(ref)
+    const salidas = snapshot.data()?.salidas || []
+    let found = false
+    const updated = salidas.map((salida, si) => ({
+      ...salida,
+      detalles: (salida.detalles || []).map((detalle, di) => {
+        if (String(salida.id || si) !== assignment.salidaId || String(detalle.id || di) !== assignment.detalleId) return detalle
+        if (firstProgramTerritory(detalle.territorio) !== assignment.territorio) throw new Error('La salida cambió. Intentá nuevamente.')
+        if (expectedCoordinates && (!validPinCoordinates(detalle.pinCoordinates) || detalle.pinCoordinates.some((value, index) => Math.abs(value - expectedCoordinates[index]) > 1e-9))) {
+          throw new Error('El pin cambió después de tu movimiento. No se modificó su posición.')
+        }
+        found = true
+        return { ...detalle, pinCoordinates: coordinates, pinStatus: 'manual' }
+      }),
+    }))
+    if (!found) throw new Error('Abrí Programa una vez para actualizar estas salidas antes de moverlas.')
+    transaction.set(ref, { salidas: updated, updatedAt: Date.now(), updatedBy: firebaseAuth.currentUser?.email || '' }, { merge: true })
+    transaction.set(doc(firestore, 'config', 'public'), { programAssignments: buildPublicProgramAssignments(updated), updatedAt: Date.now() }, { merge: true })
   })
 }
 
@@ -265,7 +383,6 @@ export function applyPublicSummaries(fc, summaries) {
   if (!fc || !summaries) return fc
   const now = Date.now()
   const current = new Date()
-  const serviceYear = current.getMonth() >= 8 ? current.getFullYear() : current.getFullYear() - 1
   return {
     ...fc,
     features: fc.features.map((feature) => {
@@ -278,9 +395,11 @@ export function applyPublicSummaries(fc, summaries) {
         properties: {
           ...p,
           veces: s.veces || 0,
-          veces_servicio: s.vecesPorAnoServicio?.[String(serviceYear)] ?? s.vecesServicio ?? 0,
+          veces_servicio: serviceCompletionCount(s, current),
           primera: s.primera || null,
+          primera_inicio: s.primeraInicio || null,
           ultima_fmt: s.ultima ? s.ultima.split('-').reverse().join('/') : 'sin registro',
+          ultima_visita_fmt: (s.ultimaVisita || s.ultima)?.split('-').reverse().join('/') || 'Sin registro',
           dias_desde: dias,
           activo: s.activo === true,
           campania: !!s.campania,

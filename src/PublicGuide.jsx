@@ -1,62 +1,68 @@
-import { useEffect } from 'react'
-import { IconAdmin, IconChart, IconMap, IconPath } from './icons.jsx'
+import {useEffect,useRef,useState} from 'react'
+import {chapters} from './guideContent.js'
+import './guide.css'
 
-const GuideSection = ({ icon, title, preview, children }) => <section className="guide-section">
-  <div className="guide-section-title">{icon}<h3>{title}</h3></div>
-  {preview}
-  <ul>{children}</ul>
-</section>
+function GuideImage({src,caption}) {
+  const ref=useRef(null)
+  const [near,setNear]=useState(false)
+  useEffect(()=>{
+    if(typeof IntersectionObserver==='undefined'){setNear(true);return}
+    const observer=new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting&&entry.target.getClientRects().length)){setNear(true);observer.disconnect()}
+    },{root:ref.current.closest('.guide-content'),rootMargin:'160px 0px'})
+    observer.observe(ref.current)
+    return()=>observer.disconnect()
+  },[src])
+  return <img ref={ref} src={near?src:undefined} data-guide-src={src} alt={caption} width="390" height="844" loading="lazy" decoding="async"/>
+}
 
-export default function PublicGuide({ campaignVisible, metricsVisible, adminVisible, onClose }) {
-  useEffect(() => {
-    const closeOnEscape = (event) => event.key === 'Escape' && onClose()
-    window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
-  }, [onClose])
-
+export default function PublicGuide({campaignVisible,adminVisible,onClose}) {
+  const [image,setImage]=useState(null)
+  const [imageZoomed,setImageZoomed]=useState(false)
+  const sheet=useRef(null)
+  const imageOpener=useRef(null)
+  const publicChapters=chapters.filter(c=>!c.admin&&(c.id!=='campana'||campaignVisible))
+  const adminChapters=chapters.filter(c=>c.admin)
+  useEffect(()=>{
+    const opener=document.activeElement
+    sheet.current?.querySelector('button')?.focus()
+    return()=>opener?.focus?.()
+  },[])
+  const closeImage=()=>{setImage(null);setImageZoomed(false);requestAnimationFrame(()=>imageOpener.current?.focus())}
+  useEffect(()=>{
+    const keyboard=event=>{
+      if(event.key==='Escape'){event.stopPropagation();image?closeImage():onClose()}
+      if(event.key!=='Tab')return
+      const root=image?sheet.current.querySelector('.guide-image-view'):sheet.current
+      const items=[...root.querySelectorAll('button, summary, [tabindex="0"]')].filter(el=>el.getClientRects().length)
+      const first=items[0],last=items.at(-1)
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+    }
+    window.addEventListener('keydown',keyboard)
+    return()=>window.removeEventListener('keydown',keyboard)
+  },[image,onClose])
+  const figure=([src,caption])=><figure key={src}><button className="guide-shot" aria-label={`Ampliar captura: ${caption}`} onClick={event=>{imageOpener.current=event.currentTarget;setImage({src,caption})}}><GuideImage src={src} caption={caption}/><span>Ampliar ↗</span></button><figcaption>{caption}</figcaption></figure>
+  const chapter=(c,index)=><details className="guide-chapter" key={c.id} id={`guia-${c.id}`} open={index===0&&!c.admin}>
+    <summary><c.icon/><span>{String(index+1).padStart(2,'0')} · {c.title}</span><span className="guide-chevron" aria-hidden="true">⌄</span></summary>
+    <div className="guide-chapter-body">{c.intro&&<p className="guide-intro">{c.intro}</p>}
+      {c.points?<ul className="guide-quick-points">{c.points.map(text=><li key={text}>{text}</li>)}</ul>:<dl className="guide-steps">{c.steps.map(([title,text])=><div key={title}><dt>{title}</dt><dd>{text}</dd></div>)}</dl>}
+      {c.note&&<aside className="guide-note"><b>Tené en cuenta</b><p>{c.note}</p></aside>}
+      <div className="guide-example-head"><span>Ejemplo en el celular</span><small>{c.images.length>1?'Deslizá y tocá para ampliar':'Tocá para ampliar'}</small></div>
+      <div className="guide-shots" role="region" aria-label={`Capturas: ${c.title}`} tabIndex={c.images.length>1?0:undefined}>{c.images.map(figure)}</div>
+    </div>
+  </details>
   return <div className="guide-bg" onClick={onClose}>
-    <div className="guide-sheet" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={(event) => event.stopPropagation()}>
-      <div className="guide-grip" />
-      <header className="guide-head">
-        <div><h2 id="guide-title">Guía rápida</h2><p>Cómo usar Territorios</p></div>
-        <button onClick={onClose} aria-label="Cerrar guía">×</button>
-      </header>
-      <div className="guide-content">
-        <GuideSection icon={<IconMap />} title="Mapa" preview={<img className="guide-preview" src="guia-mapa.png" alt="Ejemplo de un territorio seleccionado y su información" />}>
-          <li>Buscá por número de territorio.</li>
-          <li>Tocá un territorio para ver su estado.</li>
-          <li>Consultá la última visita y las veces predicado.</li>
-        </GuideSection>
-        {campaignVisible && <GuideSection icon={<IconPath />} title="Campaña" preview={<img className="guide-preview" src="guia-campana.png" alt="Ejemplo de territorios activos y completados en una campaña" />}>
-          <li>Muestra solo los territorios de la campaña.</li>
-          <li><b>Naranja:</b> activo. <b>Verde:</b> completado.</li>
-          <li>Solo aparece cuando hay una campaña configurada.</li>
-        </GuideSection>}
-        {metricsVisible && <GuideSection icon={<IconChart />} title="Métrica" preview={<img className="guide-preview guide-preview-metric" src="guia-metrica.png" alt="Ejemplo del resumen de métricas y avance por zona" />}>
-          <li>Resume el avance y la frecuencia.</li>
-          <li>Compara los resultados por zona.</li>
-          <li>Cambiá la referencia entre <b>Año de servicio</b> e <b>Historial completo</b>.</li>
-        </GuideSection>}
-        {adminVisible && <div className="guide-admin-block">
-          <div className="guide-admin-heading"><IconAdmin /><div><h3>Administración</h3><p>Herramientas disponibles únicamente para administradores.</p></div></div>
-          <GuideSection title="Registros" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-registros.png" alt="Vista real de la administración de registros con datos de ejemplo" />}>
-            <li>Activá o cerrá un territorio indicando las fechas de inicio y fin.</li>
-            <li>Usá los filtros para encontrar territorios completados o todavía activos.</li>
-            <li>En un territorio activo podés definir qué manzanas quedan disponibles.</li>
-            <li>Los cambios se aplican recién al presionar <b>Guardar</b>.</li>
-          </GuideSection>
-          <GuideSection title="Generar programa" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-programa.png" alt="Vista real del generador de programa con datos de ejemplo" />}>
-            <li>Completá día, horario, lugar, territorio y conductor de cada salida.</li>
-            <li>Marcá <b>Salida por grupos</b> para organizar varios grupos bajo un mismo horario.</li>
-            <li>El borrador se comparte entre administradores y se descarga con <b>Descargar PNG</b>.</li>
-          </GuideSection>
-          <GuideSection title="Administradores" preview={<img className="guide-preview guide-preview-admin" src="guia-admin-administradores.png" alt="Vista real de la gestión de administradores con datos de ejemplo" />}>
-            <li>Agregá el correo de las personas que tendrán acceso administrativo.</li>
-            <li>Podés quitar accesos existentes; la cuenta principal y tu propia cuenta están protegidas.</li>
-            <li><b>Cerrar sesión</b> vuelve a la experiencia pública.</li>
-          </GuideSection>
-        </div>}
+    <div ref={sheet} className="guide-sheet guide-handbook" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={event=>event.stopPropagation()}>
+      <div className="guide-main" inert={image?'':undefined}>
+        <header className="guide-head"><div><span className="guide-eyebrow">Aprendé a usar la app</span><h2 id="guide-title">Guía de usuario</h2></div><button onClick={onClose} aria-label="Cerrar guía">×</button></header>
+        <div className="guide-content">
+          <section className="guide-category guide-daily" aria-labelledby="guide-daily-title"><header className="guide-category-head"><h3 id="guide-daily-title">Uso diario</h3></header>{publicChapters.map(chapter)}</section>
+          {adminVisible&&<section className="guide-category guide-management" aria-labelledby="guide-management-title"><header className="guide-category-head"><h3 id="guide-management-title">Administración</h3><span>Solo admin</span><p>Registros, programa y herramientas de gestión. Ejemplos con datos ficticios.</p></header>{adminChapters.map(chapter)}</section>}
+          <footer className="guide-footnote">Versión {__APP_VERSION__}{__APP_LOCAL__?' · Local':''}</footer>
+        </div>
       </div>
+      {image&&<div className="guide-image-view" role="region" aria-label="Captura ampliada"><div className="guide-image-tools"><button autoFocus className="guide-image-close" onClick={closeImage}>← Volver a la guía</button><button className="guide-image-close" aria-pressed={imageZoomed} onClick={()=>setImageZoomed(value=>!value)}>{imageZoomed?'Ajustar a pantalla':'Ver tamaño real'}</button></div><div className={`guide-image-canvas${imageZoomed?' zoomed':''}`}><img src={image.src} alt={image.caption}/></div><p>{image.caption}{imageZoomed&&' Deslizá la imagen para explorar el detalle.'}</p></div>}
     </div>
   </div>
 }

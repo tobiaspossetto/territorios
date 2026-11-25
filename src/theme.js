@@ -2,6 +2,8 @@ export const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 
 // Capa clara, blanca y sin relieve cromático usada antes del rediseño.
 export const MAP_STYLE = `https://api.maptiler.com/maps/streets-v2-light/style.json?key=${MAPTILER_KEY}`
+// Same tile generation preserves existing building/component references.
+export const MAP_STYLE_DARK = `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${MAPTILER_KEY}`
 
 // Polígonos de territorio: dorado sobre blanco. "hecho" es solo de Campaña:
 // un territorio marcado C cuya pasada ya se completó se pinta verde.
@@ -22,20 +24,26 @@ export const COLORS_HECHO = {
 
 // Estilo OFFLINE: base desde el extracto local zona.pmtiles + glyphs locales.
 // Se usa solo cuando no hay conexión (online sigue con MapTiler, sin cambios).
-export function offlineStyle() {
+export function offlineStyle(theme = 'dark') {
+  const dark = theme === 'dark'
   const base = new URL('./', location.href).href
   return {
     version: 8,
     glyphs: base + 'fonts/{fontstack}/{range}.pbf',
     sources: { pm: { type: 'vector', url: `pmtiles://${base}zona.pmtiles`, attribution: '© OpenStreetMap' } },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#0a0f1c' } },
-      { id: 'earth', type: 'fill', source: 'pm', 'source-layer': 'earth', paint: { 'fill-color': '#0e1626' } },
-      { id: 'landuse', type: 'fill', source: 'pm', 'source-layer': 'landuse', paint: { 'fill-color': '#12203a', 'fill-opacity': 0.5 } },
-      { id: 'water', type: 'fill', source: 'pm', 'source-layer': 'water', paint: { 'fill-color': '#0a2036' } },
+      { id: 'bg', type: 'background', paint: { 'background-color': dark ? '#0a0f1c' : '#f4f3ef' } },
+      { id: 'earth', type: 'fill', source: 'pm', 'source-layer': 'earth', paint: { 'fill-color': dark ? '#0e1626' : '#f4f3ef' } },
+      { id: 'landuse', type: 'fill', source: 'pm', 'source-layer': 'landuse', paint: { 'fill-color': dark ? '#12203a' : '#e2e8dc', 'fill-opacity': 0.5 } },
+      { id: 'water', type: 'fill', source: 'pm', 'source-layer': 'water', paint: { 'fill-color': dark ? '#0a2036' : '#b9d5e5' } },
       { id: 'roads', type: 'line', source: 'pm', 'source-layer': 'roads',
-        paint: { 'line-color': '#3a4a63', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 16, 2] } },
-      { id: 'buildings', type: 'fill', source: 'pm', 'source-layer': 'buildings', paint: { 'fill-color': '#152036', 'fill-opacity': 0.6 } },
+        paint: { 'line-color': dark ? '#3a4a63' : '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 16, 2] } },
+      { id: 'buildings', type: 'fill', source: 'pm', 'source-layer': 'buildings', paint: { 'fill-color': dark ? '#152036' : '#b9b9b2', 'fill-opacity': 0.6 } },
+      { id:'road-names', type:'symbol', source:'pm', 'source-layer':'roads', minzoom:14,
+        layout:{'symbol-placement':'line','text-field':['coalesce',['get','name:es'],['get','name'],['get','ref'],''],
+          'text-font':['Noto Sans Bold'],'text-size':['interpolate',['linear'],['zoom'],14,11,17,13],
+          'symbol-spacing':180,'text-max-angle':35,'text-padding':4},
+        paint:{'text-color':dark?'#e6e8ed':'#454545','text-halo-color':dark?'#0e1626':'#ffffff','text-halo-width':2} },
     ],
   }
 }

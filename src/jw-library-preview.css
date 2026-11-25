@@ -1,0 +1,37 @@
+/* Inspired by the supplied JW Library screenshots; presentation only. */
+.app-v2.design-poc { --dp-card-shadow:none; --dp-float-shadow:0 2px 10px #00000012; }
+.app-v2.design-poc.theme-dark { --sample-purple:#bda8de; --dp-float-shadow:0 2px 10px #00000030; }
+
+/* Navigation uses color and weight, keeping the continuous grey bar. */
+.app-v2.design-poc .footer button { border-radius:0; font-weight:400; }
+.app-v2.design-poc .footer button.on,
+.app-v2.design-poc .footer button.on:hover { background:transparent; color:var(--dp-accent); box-shadow:none; font-weight:600; }
+.app-v2.design-poc .footer button:not(.on):hover { background:var(--dp-hover); }
+.app-v2.design-poc .footer svg { stroke-width:1.5; }
+.app-v2.design-poc .footer .footer-icon-selected { fill:#bda8de; stroke:var(--dp-accent); stroke-width:1.8; }
+.app-v2.design-poc.theme-dark .footer .footer-icon-selected { fill:#72608d; }
+.app-v2.design-poc .topbar-theme { background:transparent; border-color:transparent; border-radius:3px; }
+
+/* Use ordinary title case and quiet section headings. */
+.app-v2.design-poc :is(.dp-program h2,.dp-day h3,.guide-head h2,.admin-other-settings > h2) { text-transform:none; font-weight:700; }
+.app-v2.design-poc :is(.info-program-title,.mp-section,.admin-table th) { text-transform:none; letter-spacing:0; }
+.app-v2.design-poc .dp-next h3 { color:var(--dp-accent); text-transform:lowercase; letter-spacing:0; }
+.app-v2.design-poc .dp-next h3::first-letter { text-transform:uppercase; }
+
+/* Flat cards and one restrained accent on the upcoming-outing section. */
+.app-v2.design-poc .dp-outing { border-radius:4px; box-shadow:none; }
+.app-v2.design-poc .dp-outing-time { background:transparent; border-radius:0; padding-inline:0; }
+.app-v2.design-poc .dp-outing-territory b { border-radius:3px; }
+.app-v2.design-poc .dp-next { background:var(--dp-surface); border:1px solid var(--dp-border); border-left:3px solid var(--dp-accent); border-radius:4px; }
+.app-v2.design-poc .dp-next-item { background:var(--dp-bg); border-color:transparent; border-radius:3px; }
+.app-v2.design-poc .dp-day time { border-radius:3px; }
+
+/* Outline actions; retain filled primary save/confirm buttons. */
+.app-v2.design-poc .search-fab { background:var(--dp-surface); color:var(--dp-accent); border:1px solid var(--dp-border); border-radius:5px; box-shadow:none; }
+.app-v2.design-poc.theme-dark .search-fab { color:var(--dp-accent); }
+.app-v2.design-poc .maplibregl-ctrl-group { border-radius:5px!important; box-shadow:none!important; }
+.app-v2.design-poc :is(.search-x,.guide-head button,.admin-mini-btn:not(.primary),.admin-foot-btn:not(.primary),.mp-side-toggle) { border-radius:4px; box-shadow:none; }
+.app-v2.design-poc :is(.info-card,.search-sheet,.metrica-panel.mp-side-panel,.admin-panel,.guide-card,.guide-chapter,.programa-edit-dialog,.record-edit-dialog) { border-radius:6px; box-shadow:none; }
+.app-v2.design-poc :is(.info-program li,.search-item,.programa-summary,.admin-input,.aria-field-control,.record-form select) { border-radius:4px; box-shadow:none; }
+.app-v2.design-poc .programa-summary { background-image:none; }
+.app-v2.design-poc .info-card .info-actions :is(.info-registro,.info-share) { background:transparent; box-shadow:none; border:0; border-radius:3px; }

@@ -74,6 +74,24 @@ function sampleSide(s, n = 7) {
  * @param roads features de calles renderizadas (con properties.name y geometría LineString)
  * @param maxDist  distancia máx. en metros entre lado y calle para considerarla suya
  */
+export function mergeTerritoryStreetLabels(previous, next, territory) {
+  const sides=new Map((previous?.territorio===territory?previous.features:[])
+    .map(feature=>[JSON.stringify(feature.geometry),feature]))
+  for(const feature of next.features)sides.set(JSON.stringify(feature.geometry),feature)
+  return {type:'FeatureCollection',territorio:territory,features:[...sides.values()]}
+}
+
+export function callesDelMapa(map, online) {
+  try {
+    const layer = online
+      ? map.getStyle()?.layers?.find(layer => layer['source-layer'] === 'transportation_name')
+      : { source:'pm', 'source-layer':'roads' }
+    const source = layer?.source || 'maptiler_planet'
+    return map.querySourceFeatures(source, {sourceLayer:layer?.['source-layer'] || 'transportation_name'})
+  }
+  catch { return [] }
+}
+
 export function bordeConCalles(geom, roads, maxDist = 30) {
   const polys = geom.type === 'Polygon' ? [geom.coordinates]
     : geom.type === 'MultiPolygon' ? geom.coordinates : []

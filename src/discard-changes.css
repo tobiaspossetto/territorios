@@ -1,0 +1,9 @@
+.app-v2 .discard-changes-dialog { width:min(420px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); box-sizing:border-box; padding:24px; margin:auto; border:1px solid var(--dp-border,var(--stroke)); border-radius:16px; background:var(--dp-surface,var(--panel)); color:var(--dp-text,var(--txt)); box-shadow:0 16px 60px #0003; overflow:auto; }
+.app-v2 .discard-changes-dialog::backdrop { background:#17141085; }
+.app-v2 .discard-changes-icon { display:grid; place-items:center; width:32px; height:32px; margin-bottom:14px; border-radius:9px; color:var(--dp-accent,var(--brand-orange)); background:var(--dp-tint,var(--track)); font-size:20px; font-weight:750; }
+.app-v2 .discard-changes-dialog h2 { margin:0 0 10px; font:700 20px/1.3 inherit; font-family:inherit; font-size:20px; line-height:1.3; letter-spacing:-.4px; }
+.app-v2 .discard-changes-dialog p { margin:0; color:var(--dp-muted,var(--muted)); font-size:13px; line-height:1.6; }
+.app-v2 .discard-changes-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.app-v2 .discard-changes-actions button { flex:1; min-height:44px; padding:8px 12px; border:1px solid var(--dp-border,var(--stroke)); border-radius:8px; background:var(--dp-surface,var(--panel)); color:var(--dp-text,var(--txt)); box-shadow:none; font:600 12px/1.4 inherit; font-family:inherit; font-size:12px; cursor:pointer; }
+.app-v2 .discard-changes-actions .discard-changes-confirm { background:var(--dp-danger,#b63232); border-color:transparent; color:var(--dp-on-accent,#fff); }
+.app-v2 .discard-changes-actions button:focus-visible { outline:3px solid var(--dp-accent,var(--brand-orange)); outline-offset:3px; }

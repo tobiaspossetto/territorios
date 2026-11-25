@@ -1,58 +1,65 @@
 import { useState, useRef, useEffect } from 'react'
 import { IconSearch } from './icons.jsx'
+import {programOrderAssignments,assignmentSearchTitle,assignmentCanNavigate,assignmentTerritoryText} from './assignmentSearch.js'
 
-// Buscador de territorio por número. Botón grande (pulgar) -> hoja inferior con
-// teclado numérico y sugerencias grandes tocables.
-export default function Buscador({ data, onPick }) {
+// Las opciones son las salidas públicas del programa, no todos los territorios.
+export default function Buscador({ data, assignments=[], posts=[], onPick }) {
   const [open, setOpen] = useState(false)
-  const [q, setQ] = useState('')
-  const inputRef = useRef(null)
+  const sheetRef=useRef(null)
 
   useEffect(() => {
-    if (open && inputRef.current) inputRef.current.focus()
+    if(!open)return
+    const previous=document.activeElement
+    sheetRef.current?.querySelector('button')?.focus()
+    const keys=event=>{
+      if(event.key==='Escape'){event.preventDefault();setOpen(false)}
+      if(event.key==='Tab'){
+        const elements=[...sheetRef.current.querySelectorAll('button')]
+        const first=elements[0],last=elements[elements.length-1]
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+      }
+    }
+    document.addEventListener('keydown',keys)
+    return()=>{document.removeEventListener('keydown',keys);previous?.focus()}
   }, [open])
 
   if (!data) return null
 
-  const close = () => { setOpen(false); setQ('') }
+  const close = () => { setOpen(false) }
 
-  // territorios ordenados por número; filtra por el número tipeado
-  const nums = data.features
-    .map((f) => ({ id: f.properties.territorio, zona: f.properties.zona, n: parseInt(String(f.properties.territorio).replace(/\D/g, ''), 10) }))
-    .sort((a, b) => a.n - b.n)
-  const dig = q.replace(/\D/g, '')
-  const results = dig ? nums.filter((t) => String(t.n).startsWith(dig)) : nums
+  const results=programOrderAssignments(assignments)
 
-  const pick = (id) => { onPick(id); close() }
+  const pick = (assignment) => { if(!assignmentCanNavigate(assignment,data))return;onPick(assignment.territorio);close() }
 
   return (
     <>
-      <button className="search-fab" onClick={() => setOpen(true)} aria-label="Buscar territorio">
+      <button className="search-fab" onClick={() => setOpen(true)} aria-label="Buscar salida">
         <IconSearch />
-        <span>Buscar territorio</span>
+        <span>Buscar salida</span>
       </button>
 
       {open && (
         <div className="search-sheet-bg" onClick={close}>
-          <div className="search-sheet" onClick={(e) => e.stopPropagation()}>
+          <div ref={sheetRef} className="search-sheet departure-search-sheet" role="dialog" aria-modal="true" aria-labelledby="departure-search-title" onClick={(e) => e.stopPropagation()}>
             <div className="search-grip" />
             <div className="search-head">
-              <span>Buscar territorio</span>
+              <span id="departure-search-title">Buscar salida</span>
               <button className="search-x" onClick={close} aria-label="Cerrar">×</button>
             </div>
-            <input
-              ref={inputRef} className="search-input" type="text" inputMode="numeric"
-              pattern="[0-9]*" placeholder="N° de territorio (ej. 52)"
-              value={q} onChange={(e) => setQ(e.target.value)}
-            />
-            <div className="search-list">
-              {results.length === 0 && <div className="search-empty">No hay territorio con ese número.</div>}
-              {results.map((t) => (
-                <button key={t.id} className="search-item" onClick={() => pick(t.id)}>
-                  <b>{t.id}</b>
-                  <span>{t.zona}</span>
+            <div className="territory-search-status">Elegí una salida del programa</div>
+            <div className="search-list" aria-label="Salidas del programa">
+              {results.length === 0 && <div className="search-empty">No hay salidas publicadas en el programa.</div>}
+              {results.map((assignment) => {
+                const valid=assignmentCanNavigate(assignment,data)
+                const territoryText=assignmentTerritoryText(assignment,data)
+                const color=posts.find(post=>post.id===assignment.id)?.color
+                return <button key={assignment.id} className="search-item" aria-disabled={!valid} aria-label={`Salida ${assignmentSearchTitle(assignment)}, ${assignment.lugar?`${assignment.lugar}, `:''}${territoryText}`} onClick={() => pick(assignment)}>
+                  <i className="departure-search-dot" style={{background:valid?(color||'var(--brand-orange)'):'var(--muted)'}} aria-hidden="true"/>
+                  <span className="departure-search-copy"><b>{assignmentSearchTitle(assignment)}</b>{assignment.lugar&&<span className="departure-search-place">{assignment.lugar}</span>}<small>{territoryText}</small></span>
+                  {valid&&<span className="departure-search-arrow" aria-hidden="true">›</span>}
                 </button>
-              ))}
+              })}
             </div>
           </div>
         </div>

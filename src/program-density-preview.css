@@ -1,0 +1,68 @@
+/* Compact program content; keep each action at least 44px tall. */
+.app-v2.design-poc .dp-program-inner { max-width:960px; padding:20px 26px 32px; }
+.app-v2.design-poc .dp-program-heading { margin-bottom:13px; }
+.app-v2.design-poc .dp-program h2 { font-size:clamp(18px,1.7vw,22px); }
+.app-v2.design-poc .dp-next { padding:11px; margin-bottom:20px; border-radius:11px; }
+.app-v2.design-poc .dp-next-heading { gap:7px; margin-bottom:7px; }
+.app-v2.design-poc .dp-next h3 { font-size:10px; }
+.app-v2.design-poc .dp-next-heading > span { font-size:11px; }
+.app-v2.design-poc .dp-next-item { min-height:44px; padding:7px 9px; gap:9px; border-radius:7px; }
+.app-v2.design-poc .dp-next-item strong { font-size:12px; }
+.app-v2.design-poc .dp-next-item > b { font-size:11px; }
+.app-v2.design-poc .dp-next-item small { font-size:10px; }
+.app-v2.design-poc .dp-schedule { gap:18px; }
+.app-v2.design-poc .dp-day { gap:7px; }
+.app-v2.design-poc .dp-day h3 { font-size:12px; }
+.app-v2.design-poc .dp-day time { font-size:10px; padding:3px 6px; }
+.app-v2.design-poc .dp-day-outings { padding-left:16px; gap:9px; }
+.app-v2.design-poc .dp-period-heading { display:flex; align-items:center; gap:7px; margin:3px 0 0; min-width:0; color:var(--dp-muted); font-size:11px; font-weight:500; line-height:1.4; }
+.app-v2.design-poc .dp-period-heading:not(:first-child) { margin-top:8px; }
+.app-v2.design-poc .dp-period-heading b { padding:2px 6px; border-radius:3px; background:var(--sample-ochre-soft); color:var(--sample-ochre-ink); font-size:10px; font-weight:700; }
+.app-v2.design-poc .dp-period-heading[data-period="PM"] b { background:var(--sample-purple-soft); color:var(--sample-purple); }
+.app-v2.design-poc .dp-period-heading::after { content:''; flex:1; height:1px; background:var(--dp-border); margin-left:3px; }
+.app-v2.design-poc .dp-outing { min-height:64px; padding:8px 12px; gap:12px; border-radius:9px; }
+.app-v2.design-poc .dp-outing-place strong { font-size:12px; }
+.app-v2.design-poc :is(.dp-outing-place > small,.dp-mobile-conductor) { font-size:10.5px; }
+.app-v2.design-poc .dp-outing-time { font-size:14px; min-height:40px; padding:4px; gap:2px; }
+.app-v2.design-poc .dp-outing-territory b { font-size:11px; padding:3px 5px; }
+.app-v2.design-poc .dp-outing-conductor b { font-size:11px; }
+@media(max-width:720px) {
+  .app-v2.design-poc .dp-program-inner { padding:15px 12px 24px; }
+  .app-v2.design-poc .dp-day-outings { padding-left:8px; }
+  .app-v2.design-poc .dp-outing { min-height:64px; padding:8px; gap:7px; }
+}
+.app-v2.design-poc .dp-outing::after { width:6px; top:0; bottom:0; border-radius:0; }
+.app-v2.design-poc .dp-outing .dp-outing-time { background:color-mix(in srgb,var(--outing-color) 18%,var(--dp-surface)); border-radius:4px; }
+.app-v2.design-poc .dp-outing .dp-outing-territory b,
+.app-v2.design-poc .dp-next .dp-next-item > b { background:var(--outing-color); color:var(--outing-ink); border-radius:3px; padding:4px 7px; }
+.app-v2.design-poc .dp-next .dp-next-item { border-right:6px solid var(--outing-color); }
+.territory-badge { cursor:pointer; }
+.territory-badge:focus-visible { outline:2px solid var(--dp-accent,#725398); outline-offset:2px; }
+
+/* A single flat list per day: hierarchy comes from spacing and type. */
+.app-v2.design-poc .dp-program-minimal .dp-day-outings { gap:0; border-left:0; margin-left:0; padding-left:12px; }
+.app-v2.design-poc .dp-program-minimal .dp-period-heading { margin:8px 0 0; padding:5px 0; }
+.app-v2.design-poc .dp-program-minimal .dp-period-heading:not(:first-child) { margin-top:16px; }
+.app-v2.design-poc .dp-program-minimal .dp-period-heading b { background:transparent; padding:0; font-weight:500; }
+.app-v2.design-poc .dp-program-minimal .dp-period-heading span { font-weight:600; }
+.app-v2.design-poc .dp-program-minimal .dp-outing { grid-template-columns:52px minmax(0,1fr) minmax(70px,120px) 18px; gap:12px; min-height:64px; padding:12px 10px 12px 12px; margin-top:6px; border:1px solid var(--dp-border); border-radius:4px; box-shadow:none; background:var(--dp-surface); }
+.app-v2.design-poc .dp-program-minimal .dp-program-hint { margin:5px 0 0; font-size:12px; line-height:1.5; color:var(--dp-muted); }
+.app-v2.design-poc .dp-program-minimal .dp-outing-arrow { display:flex; align-items:center; justify-content:center; color:var(--dp-accent); }
+.app-v2.design-poc .dp-program-minimal button.dp-outing:hover { background:var(--dp-hover); border-color:var(--dp-accent); }
+.app-v2.design-poc .dp-program-minimal button.dp-outing:active { background:var(--dp-tint); border-color:var(--dp-accent); box-shadow:inset 0 0 0 1px var(--dp-accent); }
+.app-v2.design-poc .dp-program-minimal .dp-outing[data-navigable="false"] { background:transparent; border-color:transparent; border-bottom-color:var(--dp-border); }
+.app-v2.design-poc .dp-program-minimal .dp-outing::after { left:0; right:auto; top:14px; bottom:14px; width:3px; border-radius:2px; }
+.app-v2.design-poc .dp-program-minimal .dp-outing .dp-outing-time { background:transparent; min-height:0; padding:0; align-self:start; margin-top:1px; }
+.app-v2.design-poc .dp-program-minimal .dp-outing-territory { justify-items:end; padding:0; }
+.app-v2.design-poc .dp-program-minimal .dp-outing .dp-outing-territory b { background:transparent; color:var(--dp-text); padding:0; text-align:right; font-weight:600; }
+.app-v2.design-poc .dp-program-minimal .dp-outing-person { color:var(--dp-muted); font-size:10.5px; line-height:1.5; }
+.app-v2.design-poc .dp-program-minimal .dp-next { padding:12px 14px; border:0; border-left:3px solid var(--dp-accent); border-radius:0; background:var(--dp-surface); }
+.app-v2.design-poc .dp-program-minimal .dp-next-list { gap:0; }
+.app-v2.design-poc .dp-program-minimal .dp-next .dp-next-item { background:transparent; border:0; border-bottom:1px solid var(--dp-border); border-right:3px solid var(--outing-color); border-radius:0; padding:10px 9px 10px 0; }
+.app-v2.design-poc .dp-program-minimal .dp-next .dp-next-item:last-child { border-bottom:0; }
+.app-v2.design-poc .dp-program-minimal button:is(.dp-outing,.dp-next-item):focus-visible { outline:2px solid var(--dp-accent); outline-offset:2px; }
+@media(max-width:720px) {
+  .app-v2.design-poc .dp-program-minimal .dp-day-outings { padding-left:4px; }
+  .app-v2.design-poc .dp-program-minimal .dp-outing { grid-template-columns:44px minmax(0,1fr) minmax(48px,72px) 16px; gap:7px; padding:12px 8px 12px 10px; }
+  .app-v2.design-poc .dp-program-minimal .dp-outing-arrow svg { width:16px; height:16px; }
+}

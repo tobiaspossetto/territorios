@@ -1,0 +1,130 @@
+/* Shared reference palette, typography and compact shell. */
+@font-face {
+  font-family:'Reference Noto Sans'; font-style:normal; font-weight:400 800; font-display:swap;
+  src:url('./assets/reference-font/noto-sans-latin-variable.woff2') format('woff2');
+}
+.app-v2.design-poc.theme-light {
+  --sample-blue:#526ca2; --sample-teal:#3c6a75; --sample-ochre:#946f2b;
+  --sample-red:#88312b; --sample-purple:#563d84; --sample-ochre-ink:#886222;
+  --sample-ochre-soft:#f8f2e5; --sample-teal-soft:#edf4f5; --sample-purple-soft:#eee8f6;
+  --sample-shell:#d8d8d8; --sample-heading:#626262; --sample-shell-muted:#5b5b5b;
+  --dp-bg:#f7f7f5; --dp-surface:#ffffff; --dp-text:#292929; --dp-muted:#626262;
+  --dp-border:#d8d8d8; --dp-accent:var(--sample-purple); --dp-tint:var(--sample-purple-soft); --dp-hover:#f0edf5;
+  --dp-on-accent:#ffffff; --dp-danger:var(--sample-red); --dp-success:var(--sample-teal);
+  --dp-card-shadow:0 2px 4px #29292905,0 6px 16px #29292908;
+  --dp-float-shadow:0 6px 24px #29292914;
+  --brand-charcoal:#292929; --brand-cream:#f7f7f5; --brand-blue:var(--sample-blue);
+  --success:var(--sample-teal); --danger:var(--sample-red);
+}
+.app-v2.design-poc.theme-dark {
+  --sample-blue:#a4b8df; --sample-teal:#92bec8; --sample-ochre:#f7cf6f;
+  --sample-red:#c67b77; --sample-purple:#bea5df; --sample-ochre-ink:#f7cf6f;
+  --sample-ochre-soft:#342f23; --sample-teal-soft:#213035; --sample-purple-soft:#342c40;
+  --sample-shell:#292929; --sample-heading:#c0c0c0; --sample-shell-muted:#c0c0c0;
+  --dp-bg:#121212; --dp-surface:#292929; --dp-text:#ffffff; --dp-muted:#c0c0c0;
+  --dp-border:#545454; --dp-accent:var(--sample-purple); --dp-tint:var(--sample-purple-soft); --dp-hover:#38313f;
+  --dp-on-accent:#121212; --dp-danger:var(--sample-red); --dp-success:var(--sample-teal);
+  --brand-charcoal:#ffffff; --brand-blue:var(--sample-blue);
+  --success:var(--sample-teal); --danger:var(--sample-red);
+}
+.app-v2.design-poc :is(.topbar,.footer) { background:var(--sample-shell); }
+.app-v2.design-poc :is(.topbar small,.topbar-status,.footer button:not(.on)) { color:var(--sample-shell-muted); }
+.app-v2.design-poc .footer button.on { background:var(--sample-purple-soft); color:var(--sample-purple); }
+.app-v2.design-poc .footer button.on:hover { background:var(--sample-purple-soft); }
+.app-v2.design-poc .dp-program h2 { color:var(--sample-heading); }
+.app-v2.design-poc .dp-day h3 { color:var(--sample-teal); }
+.app-v2.design-poc .dp-day time { color:var(--sample-ochre-ink); border-color:var(--dp-border); background:var(--sample-ochre-soft); }
+.app-v2.design-poc .dp-next { border-top-color:var(--sample-ochre); background:var(--sample-ochre-soft); }
+.app-v2.design-poc .dp-next h3 { color:var(--sample-ochre-ink); }
+.app-v2.design-poc .dp-today { color:var(--sample-ochre-ink); background:var(--sample-ochre-soft); }
+.app-v2.design-poc .program-week-divider { color:var(--sample-teal); }
+.app-v2.design-poc.theme-light .dp-next[data-has-next="true"] .dp-next-item::after {
+  background-image:linear-gradient(110deg,transparent 30%,#526ca21a 40%,#ffffffed 50%,#526ca21a 60%,transparent 70%);
+}
+.app-v2.design-poc .territory-badge.selected { color:var(--dp-accent); background:var(--dp-tint); border-color:var(--dp-accent); }
+.app-v2.design-poc :is(.info-status.active,.mp-selected-status.active) { color:var(--sample-ochre); background:var(--sample-ochre-soft); border-color:var(--sample-ochre); }
+.app-v2.design-poc .info-program-title { color:var(--sample-teal); }
+.app-v2.design-poc .territory-detail-toggle { color:var(--dp-accent); }
+.app-v2.design-poc .mp-side-summary > strong { color:var(--sample-ochre); }
+.app-v2.design-poc .mp-section { color:var(--sample-ochre); }
+.app-v2.design-poc :is(.guide-head h2,.guide-chapter summary > svg,.guide-chapter[open] summary) { color:var(--sample-purple); }
+.app-v2.design-poc .guide-chapter[open] summary { background:var(--sample-purple-soft); }
+.app-v2.design-poc :is(.admin-panel-title,.admin-other-settings > h2,.programa-title) { color:var(--sample-red); }
+.app-v2.design-poc .admin-table thead th { color:var(--sample-red); background:var(--dp-bg); }
+.app-v2.design-poc .programa-edit-heading strong { color:var(--sample-teal); }
+
+/* Typography follows the reference hierarchy while retaining the compact shell. */
+.app-v2.design-poc { font-family:'Reference Noto Sans',Arial,sans-serif; }
+.app-v2.design-poc :is(button,input,select,textarea) { font-family:inherit; }
+.app-v2.design-poc .topbar h1 { font-size:16px; font-weight:800; line-height:1.2; letter-spacing:0; }
+.app-v2.design-poc .topbar small { font-weight:400; letter-spacing:0; }
+.app-v2.design-poc .dp-program h2 { font-size:clamp(22px,2vw,26px); font-weight:800; line-height:1.3; letter-spacing:0; text-transform:uppercase; }
+.app-v2.design-poc .dp-day h3 { font-size:14px; font-weight:800; line-height:1.4; letter-spacing:0; text-transform:uppercase; }
+.app-v2.design-poc .dp-next h3 { font-size:11px; font-weight:800; letter-spacing:.02em; }
+.app-v2.design-poc .dp-outing-place strong { font-size:14px; font-weight:700; line-height:1.45; }
+.app-v2.design-poc :is(.dp-outing-place > small,.dp-mobile-conductor) { font-size:12px; font-weight:400; line-height:1.5; }
+.app-v2.design-poc .dp-outing-time { font-size:16px; font-weight:700; letter-spacing:0; line-height:1.3; }
+.app-v2.design-poc .dp-outing-territory small { font-size:10px; font-weight:400; }
+.app-v2.design-poc .dp-outing-territory b { font-size:13px; font-weight:700; line-height:1.4; }
+.app-v2.design-poc .dp-group-label { font-size:10px; font-weight:700; }
+.app-v2.design-poc .guide-head h2 { font-weight:800; text-transform:uppercase; letter-spacing:0; }
+.app-v2.design-poc .guide-chapter summary { font-size:14px; font-weight:700; line-height:1.5; }
+.app-v2.design-poc :is(.guide-quick-points,.guide-steps dd) { font-size:13px; line-height:1.65; }
+.app-v2.design-poc :is(.guide-steps dt,.programa-edit-heading strong) { font-weight:700; letter-spacing:0; }
+.app-v2.design-poc .admin-panel-title { font-size:16px; font-weight:800; letter-spacing:0; }
+.app-v2.design-poc .admin-other-settings > h2 { font-size:18px; font-weight:800; letter-spacing:0; text-transform:uppercase; }
+.app-v2.design-poc .admin-table thead th { font-size:10px; font-weight:800; letter-spacing:.02em; }
+.app-v2.design-poc :is(.mp-section,.info-program-title) { font-weight:700; text-transform:uppercase; letter-spacing:.02em; }
+.app-v2.design-poc .info-t b { font-weight:800; letter-spacing:0; }
+
+/* Lavender is the shared action color, including the welcome controls. */
+.app-v2.design-poc { --shell-height:44px; --rail-width:144px; }
+.app-v2.design-poc .topbar { padding-inline:12px; }
+.app-v2.design-poc .topbar-brandmark { width:26px; height:26px; }
+.app-v2.design-poc .topbar h1 { font-size:14px; }
+.app-v2.design-poc .topbar small { font-size:9px; }
+.app-v2.design-poc .topbar-theme { width:28px; height:28px; min-height:28px; font-size:17px; color:var(--dp-accent); }
+.app-v2.design-poc .topbar-theme::after { inset:-8px; }
+.app-v2.design-poc .topbar-status { height:26px; font-size:10px; }
+.app-v2.design-poc :is(.info-share,.info-edit,.search-x,.guide-head button) { color:var(--dp-accent); }
+.app-v2.design-poc .info-card .info-actions :is(.info-share,.info-registro) { color:var(--dp-accent); }
+.app-v2.design-poc .maplibregl-ctrl-group button { color:var(--dp-accent); }
+.app-v2.design-poc.theme-light .maplibregl-ctrl-icon { filter:brightness(0) saturate(100%) invert(27%) sepia(24%) saturate(1580%) hue-rotate(222deg) brightness(94%) contrast(90%); }
+.app-v2.design-poc.theme-dark .maplibregl-ctrl-icon { filter:brightness(0) saturate(100%) invert(77%) sepia(20%) saturate(567%) hue-rotate(222deg) brightness(95%) contrast(89%); }
+.app-v2.design-poc :is(.admin-mini-btn.primary,.admin-foot-btn.primary,.admin-head-save.dirty) { color:var(--dp-on-accent); }
+.app-v2.design-poc .admin-panel :is(.admin-mini-btn.primary,.admin-foot-btn.primary,.admin-head-save.dirty) { color:var(--dp-on-accent); }
+.app-v2.design-poc .splash .splash-title { color:var(--dp-accent); background:none; -webkit-text-fill-color:currentColor; }
+.app-v2.design-poc .splash .splash-sub { color:var(--dp-muted); }
+.app-v2.design-poc .splash.collage-splash { --collage-ink:var(--dp-accent); --collage-track:var(--dp-tint); background:var(--dp-bg); }
+.app-v2.design-poc .splash-loader i { background:var(--dp-accent); }
+.app-v2.design-poc .admin-table .admin-c-badge { display:inline-block; width:auto; height:auto; min-width:0; padding:3px 5px; border:1px solid var(--dp-border); border-radius:4px; background:var(--dp-tint); color:var(--dp-accent); font-size:9px; font-weight:600; line-height:1.4; white-space:nowrap; box-shadow:none; }
+.app-v2.design-poc .admin-table th:first-child { width:17%; }
+.app-v2.design-poc .admin-table th:nth-child(2),.app-v2.design-poc .admin-table th:nth-child(3) { width:25%; }
+.app-v2.design-poc .admin-table th:nth-child(4) { width:21%; }
+.app-v2.design-poc .admin-table th:last-child { width:12%; }
+
+/* Day headings own the indentation; the rail groups their individual outings. */
+.app-v2.design-poc .dp-day { grid-template-columns:minmax(0,1fr); gap:10px; }
+.app-v2.design-poc .dp-day-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0; }
+.app-v2.design-poc .dp-day time { margin-top:0; }
+.app-v2.design-poc .dp-day-outings { margin-left:5px; padding-left:20px; border-left:1px solid var(--dp-border); gap:12px; }
+@media(max-width:720px) {
+  .app-v2.design-poc .dp-day { display:grid; gap:10px; }
+  .app-v2.design-poc .dp-day-outings { padding-left:10px; margin-left:3px; }
+  .app-v2.design-poc .dp-outing { grid-template-columns:48px minmax(0,1fr) 92px; gap:8px; padding-inline:10px; }
+}
+@media(min-width:721px) {
+  .app-v2.design-poc .footer { padding:10px 6px; }
+  .app-v2.design-poc .footer button { min-height:40px; padding-inline:10px; font-size:11px; gap:8px; }
+  .app-v2.design-poc .footer svg { width:19px; height:19px; }
+  .app-v2.design-poc .footer::before { padding-bottom:10px; }
+}
+@media(max-width:720px) {
+  .app-v2.design-poc { --soft-footer-space:60px; }
+  .app-v2.design-poc .topbar { padding-inline:8px; }
+  .app-v2.design-poc .topbar-status { font-size:0; }
+  .app-v2.design-poc .footer { height:calc(52px + env(safe-area-inset-bottom)); padding:3px 5px calc(3px + env(safe-area-inset-bottom)); gap:3px; }
+  .app-v2.design-poc .footer button { height:44px; min-height:44px; padding:2px; gap:2px; font-size:9px; border-radius:7px; }
+  .app-v2.design-poc .footer svg { width:17px; height:17px; }
+  .app-v2.design-poc .dp-program { bottom:calc(52px + env(safe-area-inset-bottom)); }
+}

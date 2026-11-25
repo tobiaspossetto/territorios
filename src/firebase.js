@@ -1,6 +1,11 @@
 import { getApp, getApps, initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import {productionWritesAllowed,assertProductionWritesAllowed} from './firebaseWritePolicy.js'
+
+const writeContext={development:import.meta.env.DEV,hostname:window.location.hostname,protocol:window.location.protocol}
+export const firebaseWritesBlocked=!productionWritesAllowed(writeContext)
+export const assertFirebaseWritable=()=>assertProductionWritesAllowed(writeContext)
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

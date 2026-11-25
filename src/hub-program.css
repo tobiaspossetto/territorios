@@ -1,0 +1,53 @@
+/* Program presentation only: retain the published application shell and palette. */
+.app-v2.design-poc .program-hub { color:var(--dp-text);font-family:inherit;font-size:14px;line-height:1.55; }
+.program-hub .hub-content { max-width:1240px;margin:0 auto;padding:28px 32px 40px; }
+.program-hub h2,.program-hub h3,.program-hub p { margin:0; }
+.program-hub .hub-page-head { margin-bottom:24px; }
+.program-hub .hub-page-head h2 { font-size:24px;font-weight:600;line-height:1.4;letter-spacing:0; }
+.program-hub .hub-layout { display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:36px;align-items:start; }
+.program-hub .hub-week { grid-column:1;grid-row:1;min-width:0; }
+.program-hub .hub-upcoming { grid-column:2;grid-row:1;min-width:0; }
+.program-hub svg { width:20px;height:20px;flex:0 0 20px; }
+.program-hub .hub-upcoming>h3 { display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;min-height:42px; }
+.program-hub .hub-day { margin-bottom:22px; }
+.program-hub .hub-day>header { display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;padding:8px 0; }
+.program-hub .hub-day>header>div { display:flex;align-items:center;gap:8px; }
+.program-hub .hub-day h3 { font-size:14px;font-weight:600; }
+.program-hub .hub-day time { font-size:12px;color:var(--sample-ochre-ink,var(--dp-muted));font-weight:600;font-variant-numeric:tabular-nums; }
+.program-hub .hub-today { font-size:10px;line-height:1.5;padding:2px 6px;border-radius:3px;color:var(--dp-accent);background:var(--dp-tint);font-weight:600; }
+.program-hub .hub-day>div,.program-hub .hub-next-surface { background:var(--dp-surface);border:1px solid var(--dp-border);border-radius:5px;overflow:hidden; }
+.program-hub .hub-outing { position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:18px;width:100%;min-height:88px;border:0;border-bottom:1px solid var(--dp-border);padding:16px 18px;background:transparent;color:var(--dp-text);font:inherit;text-align:left; }
+.program-hub .hub-outing:last-child { border-bottom:0; }
+.program-hub .hub-outing > * { position:relative;z-index:2; }
+.program-hub .hub-outing::before { content:'';position:absolute;left:0;top:16px;bottom:16px;width:3px;background:var(--hub-outing); }
+.program-hub button.hub-outing { cursor:pointer;transition:background .15s ease; }
+.program-hub button.hub-outing:hover,.program-hub button.hub-outing:active { background:var(--dp-hover); }
+.program-hub button.hub-outing:focus-visible { outline:2px solid var(--dp-accent);outline-offset:-3px; }
+.program-hub .hub-time { display:flex;flex-direction:column;align-self:start;min-width:52px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums; }
+.program-hub .hub-time small { font-size:11px;font-weight:400;color:var(--dp-muted);margin-top:2px; }
+.program-hub .hub-outing-body { flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px; }
+.program-hub .hub-outing-body strong { color:var(--sample-blue,var(--dp-accent));font-size:15px;font-weight:500;overflow-wrap:anywhere; }
+.program-hub div.hub-outing .hub-outing-body strong { color:var(--dp-text); }
+.program-hub .hub-outing-body small { width:100%;color:var(--dp-muted);font-size:12px;line-height:1.5;overflow-wrap:anywhere; }
+.program-hub .hub-territories { width:100%;font-size:12px;font-weight:600;margin-top:3px;overflow-wrap:anywhere; }
+.program-hub .hub-group { color:var(--hub-outing-ink);font-size:11px;font-weight:600;padding:2px 6px;border-radius:3px;background:var(--hub-outing);overflow-wrap:anywhere; }
+.program-hub .hub-map-action { display:flex;align-items:center;gap:7px;color:var(--sample-blue,var(--dp-accent));font-size:12px;flex-shrink:0; }
+.program-hub .hub-next-date { padding:16px 18px 8px;font-size:12px;color:var(--dp-muted);text-transform:capitalize; }
+.program-hub .hub-next-date>strong { display:block;font-size:27px;font-weight:500;color:var(--dp-text);margin-top:5px;font-variant-numeric:tabular-nums; }
+.program-hub .hub-next-date small { font-size:13px;font-weight:400; }
+.program-hub .hub-outing-next { padding-top:12px;min-height:72px;gap:10px; }
+.program-hub .hub-outing-next .hub-map-action span { display:none; }
+.program-hub .hub-empty { color:var(--dp-muted);font-size:13px;padding:16px 0; }
+.program-hub :is(.hub-day[data-today="true"] .hub-outing,.hub-outing-next)::after { content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 38%,#ffffff0f 45%,#ffffff38 50%,#ffffff0f 55%,transparent 62%);background-size:250% 100%;background-repeat:no-repeat;animation:programTodayReflection 5s ease-in-out infinite; }
+.theme-light .program-hub :is(.hub-day[data-today="true"] .hub-outing,.hub-outing-next)::after { background-image:linear-gradient(110deg,transparent 35%,#bda8de22 44%,#ffffffee 50%,#bda8de22 56%,transparent 65%); }
+/* A top marker identifies the active tab without changing the shell dimensions. */
+.app-v2.design-poc .footer button { position:relative; }
+.app-v2.design-poc .footer button.on::after { content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--dp-accent);pointer-events:none; }
+@media(max-width:1000px) { .program-hub .hub-layout { grid-template-columns:minmax(0,1fr) 250px;gap:24px; }.program-hub .hub-map-action span { display:none; } }
+@media(max-width:720px) {
+ .program-hub .hub-content { padding:18px 14px 28px; }.program-hub .hub-page-head { margin-bottom:16px; }.program-hub .hub-page-head h2 { font-size:21px; }
+ .program-hub .hub-layout { display:flex;flex-direction:column;gap:20px; }.program-hub .hub-upcoming,.program-hub .hub-week { width:100%; }.program-hub .hub-upcoming>h3 { min-height:36px;font-size:14px; }
+ .program-hub .hub-outing { padding:13px 12px;gap:12px;min-height:82px; }.program-hub .hub-time { font-size:17px;min-width:48px; }.program-hub .hub-outing-body strong { font-size:14px; }
+ .program-hub .hub-next-date { padding:12px 16px 4px; }.program-hub .hub-next-date>strong { font-size:24px; }.program-hub .hub-next-surface .hub-outing { min-height:64px;padding-inline:16px; }
+}
+@media(prefers-reduced-motion:reduce) { .program-hub button.hub-outing { transition:none; }.program-hub .hub-outing::after { display:none; } }

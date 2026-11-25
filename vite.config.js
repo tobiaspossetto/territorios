@@ -3,17 +3,21 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // base './' -> rutas relativas (sirve local y en el subpath de GitHub Pages)
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: './',
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '')),
+    __APP_LOCAL__: JSON.stringify(command !== 'build'),
+  },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',   // registro manual en main.jsx -> auto-aplica y recarga al haber versión nueva
+      registerType: 'autoUpdate', // activación y recarga automática coordinadas
       injectRegister: null,
       includeAssets: ['icono.png', 'logo-furgon.png'],
       manifest: {
-        name: 'Territorios V2 · Congregación Este',
-        short_name: 'Territorios V2',
+        name: 'Territorios · Congregación Este',
+        short_name: 'Territorios',
         description: 'Gestión de territorios de predicación',
         theme_color: '#242120',
         background_color: '#f7f5f2',
@@ -33,6 +37,8 @@ export default defineConfig({
         // el celu podía mostrar datos viejos hasta recargar. Van con
         // NetworkFirst más abajo en vez de precache.
         globPatterns: ['**/*.{js,css,html,png,svg,webmanifest,pmtiles,pbf}'],
+        // Download the collage only when selected, rather than also precaching it for Auto.
+        globIgnores: ['**/collage-carga.png'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         skipWaiting: true,      // activa el SW nuevo al toque
         clientsClaim: true,     // toma control de la pestaña sin esperar
@@ -40,6 +46,15 @@ export default defineConfig({
         // sirven del disco y no consumen cuota. Caché aparte del de la app: los
         // deploys de datos/código actualizan igual.
         runtimeCaching: [
+          {
+            urlPattern: /\/splash-scenes\/[^/?]+\.webp$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'splash-scenes-v2',
+              expiration: {maxEntries:20,maxAgeSeconds:60*60*24*45},
+              cacheableResponse: {statuses:[0,200]},
+            },
+          },
           {
             urlPattern: /^https:\/\/api\.maptiler\.com\/.*/i,
             handler: 'CacheFirst',
@@ -66,4 +81,4 @@ export default defineConfig({
       devOptions: { enabled: false },   // SW solo en build/prod -> dev y validación local sin cambios
     }),
   ],
-})
+}))

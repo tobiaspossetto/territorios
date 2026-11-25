@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { IconSearch } from './icons.jsx'
-import { generarS13Pdf, descargarBlob } from './s13.js'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { IconAdmin, IconCalendar, IconList, IconSearch } from './icons.jsx'
 import ProgramGenerator from './ProgramGenerator.jsx'
 import AdminUsers from './AdminUsers.jsx'
+import ProgramWeekSettings from './ProgramWeekSettings.jsx'
+import SplashTypeSettings from './SplashTypeSettings.jsx'
 import { AppDateField } from './DateTimeFields.jsx'
+import RecordEditorSurface from './RecordEditorSurface.jsx'
+import RecordFields from './RecordFields.jsx'
+import DiscardChangesDialog from './DiscardChangesDialog.jsx'
+import {startedTerritoryRecord} from './recordShortcut.js'
 
 const FILTROS = [
   { key: 'todos', label: 'Todos' },
   { key: 'completado', label: 'Completado' },
-  { key: 'activo', label: 'Activo' },
+  { key: 'activo', label: 'Empezado' },
 ]
 const CAMPOS = ['territorio', 'inicio', 'fin', 'campania', 'manzanasActivas']
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -21,12 +26,26 @@ const copyRows = (rows) => rows.map((row) => ({ ...row }))
 const isTemp = (id) => String(id).startsWith('nuevo-')
 
 export default function AdminPanel({
-  data, manzanas, registroBase, onSave, onLogout, onClose,
+  data, manzanas, registroBase, onSave, onLogout, onClose, onMinimize, minimized=false,
   onCampModoChange, campModoOn, metricsVisible, onMetricsVisibleChange,
-  initialQuery, syncError, currentEmail, theme, onThemeToggle,
+  programWeekStart=0, onProgramWeekStartChange,
+  splashType='collage',onSplashTypeChange,
+  initialQuery, recordRequest, onRecordRequestHandled, syncError, currentEmail, theme, recordsReady=true,
   preview = false,
+  designPreview = false,
 }) {
   const [view, setView] = useState('registros')
+  const filtersRef = useRef(null)
+  const [filtersHeight,setFiltersHeight] = useState(0)
+  useLayoutEffect(()=>{
+    const node=filtersRef.current
+    if(view!=='registros'||!designPreview||!node)return
+    const measure=()=>setFiltersHeight(Math.ceil(node.getBoundingClientRect().height))
+    measure()
+    const observer=new ResizeObserver(measure)
+    observer.observe(node)
+    return()=>observer.disconnect()
+  },[view,designPreview])
   const [q, setQ] = useState(initialQuery || '')
   const [filtro, setFiltro] = useState('todos')
   const [nuevoTerr, setNuevoTerr] = useState('')
@@ -39,7 +58,11 @@ export default function AdminPanel({
   const [generandoS13Anterior, setGenerandoS13Anterior] = useState(false)
   const [errorS13, setErrorS13] = useState('')
   const [exportOpen, setExportOpen] = useState(false)
+  const [exportingExcel,setExportingExcel]=useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [newRecord,setNewRecord]=useState(null)
+  const [discardRequest,setDiscardRequest]=useState(null)
+  const handledRequest=useRef(null)
 
   useEffect(() => {
     if (!dirty) setDraft(copyRows(registroBase || []))
@@ -68,7 +91,17 @@ export default function AdminPanel({
   let visibles = dig ? draft.filter((f) => String(parseInt(f.territorio.replace(/\D/g, ''), 10)) === dig || f.territorio.replace(/\D/g, '').startsWith(dig)) : draft
   if (filtro !== 'todos') visibles = visibles.filter((f) => (filtro === 'completado' ? !!f.fin : !!f.inicio && !f.fin))
   visibles = visibles.slice().reverse()
-  const editingRow = visibles.find((f) => f.id === editingId) || null
+  const editingRow = newRecord || draft.find((f) => f.id === editingId) || null
+  useEffect(()=>{
+    if(!designPreview||!recordRequest||!recordsReady||handledRequest.current===recordRequest)return
+    handledRequest.current=recordRequest
+    setView('registros')
+    setQ(recordRequest.territorio.replace(/\D/g,''))
+    const started=startedTerritoryRecord(dirty?draft:registroBase,recordRequest.territorio)
+    setNewRecord(started?null:{id:`nuevo-${crypto.randomUUID()}`,territorio:recordRequest.territorio,inicio:todayISO(),fin:null,campania:false,manzanasActivas:null,createdOrder:Date.now()})
+    setEditingId(started?.id||null)
+    onRecordRequestHandled?.(recordRequest)
+  },[recordRequest,designPreview,onRecordRequestHandled,recordsReady,registroBase,draft,dirty])
 
   const runRemote = async (action) => {
     setSaving(true); setSaveError('')
@@ -77,8 +110,19 @@ export default function AdminPanel({
     finally { setSaving(false) }
   }
   const markDirty = (next) => { setDraft(next); setDirty(true); setSaveError('') }
-  const editar = (fila, campo, valor) => markDirty(draft.map((r) => r.id === fila.id ? { ...r, [campo]: valor } : r))
-  const cambiarTerritorio = (fila, territorio) => markDirty(draft.map((r) => r.id === fila.id ? { ...r, territorio, manzanasActivas: null } : r))
+  const editar = (fila, campo, valor) => newRecord?.id===fila.id ? setNewRecord({...fila,[campo]:valor}) : markDirty(draft.map((r) => r.id === fila.id ? { ...r, [campo]: valor } : r))
+  const cambiarTerritorio = (fila, territorio) => newRecord?.id===fila.id ? setNewRecord({...fila,territorio,manzanasActivas:null}) : markDirty(draft.map((r) => r.id === fila.id ? { ...r, territorio, manzanasActivas: null } : r))
+  const closeEditor=()=>{
+    if(newRecord){
+      setDiscardRequest({message:'¿Descartar este nuevo registro? Los datos que completaste no se agregarán al borrador.',confirmLabel:'Descartar registro',action:()=>{setNewRecord(null);setEditingId(null)}})
+      return
+    }
+    setNewRecord(null);setEditingId(null)
+  }
+  const finishEditor=()=>{
+    if(newRecord){markDirty([...draft,newRecord]);setNewRecord(null)}
+    setEditingId(null)
+  }
   const alternarManzana = (fila, numero) => {
     const todas = manzanasPorTerritorio[fila.territorio] || []
     const actuales = new Set(Array.isArray(fila.manzanasActivas) ? fila.manzanasActivas.map(String) : todas)
@@ -135,27 +179,28 @@ export default function AdminPanel({
   }
 
   const pedirCierre = () => {
-    if (dirty && !window.confirm('Hay cambios sin guardar. ¿Cerrar y descartarlos?')) return
+    if(dirty){setDiscardRequest({message:'Tenés cambios pendientes en los registros. Si cerrás Administración, se descartarán.',confirmLabel:'Descartar y cerrar',action:onClose});return}
     onClose()
   }
   const salir = async () => {
-    if (dirty && !window.confirm('Hay cambios sin guardar. ¿Cerrar sesión y descartarlos?')) return
+    if(dirty){setDiscardRequest({message:'Tenés cambios pendientes en los registros. Si cerrás sesión, se descartarán.',confirmLabel:'Descartar y salir',action:()=>runRemote(onLogout)});return}
     await runRemote(onLogout)
   }
 
-  const exportar = () => {
-    const esc = (v) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const rows = draft.slice().reverse().map((f) => `<Row><Cell><Data ss:Type="String">${esc(f.territorio)}</Data></Cell><Cell><Data ss:Type="String">${esc(f.inicio)}</Data></Cell><Cell><Data ss:Type="String">${esc(f.fin || '')}</Data></Cell><Cell><Data ss:Type="String">${f.campania ? 'C' : ''}</Data></Cell></Row>`).join('')
-    const xml = `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Registros"><Table><Row><Cell><Data ss:Type="String">Territorio</Data></Cell><Cell><Data ss:Type="String">Inicio</Data></Cell><Cell><Data ss:Type="String">Fin</Data></Cell><Cell><Data ss:Type="String">Campaña</Data></Cell></Row>${rows}</Table></Worksheet></Workbook>`
-    const url = URL.createObjectURL(new Blob([xml], { type: 'application/vnd.ms-excel' }))
-    const a = document.createElement('a'); a.href = url; a.download = `territorios-${todayISO()}.xls`; a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  const exportar = async () => {
+    setExportingExcel(true);setErrorS13('')
+    try {
+      const {downloadRecordsExcel}=await import('./exportRecords.js')
+      downloadRecordsExcel(draft,todayISO())
+    } catch(error){console.error(error);setErrorS13('No se pudo exportar Excel. Volvé a intentarlo.')}
+    finally{setExportingExcel(false)}
   }
 
   const generarS13 = async (yearOffset = 0) => {
     const setGenerando = yearOffset === -1 ? setGenerandoS13Anterior : setGenerandoS13
     setGenerando(true); setErrorS13('')
     try {
+      const {generarS13Pdf,descargarBlob}=await import('./s13.js')
       const result = await generarS13Pdf(draft, territoriosValidos, new Date(), yearOffset)
       descargarBlob(result.blob, result.filename)
     } catch (error) { console.error(error); setErrorS13('No se pudieron generar los S-13. Volvé a intentarlo.') }
@@ -178,11 +223,11 @@ export default function AdminPanel({
                 {exportOpen && <div className="admin-export-options">
                   <button className="admin-foot-btn" onClick={() => generarS13(0)} disabled={dirty || generandoS13 || generandoS13Anterior}>S-13 actual</button>
                   <button className="admin-foot-btn" onClick={() => generarS13(-1)} disabled={dirty || generandoS13 || generandoS13Anterior}>S-13 anterior</button>
-                  <button className="admin-foot-btn" onClick={exportar} disabled={dirty}>Excel</button>
+                  <button className="admin-foot-btn" onClick={exportar} disabled={dirty || exportingExcel}>{exportingExcel?'Preparando…':'Excel'}</button>
                 </div>}
               </div>}
               {view === 'registros' && <button className={'admin-head-save' + (dirty ? ' dirty' : '')} onClick={guardar} disabled={!dirty || saving} aria-label="Guardar cambios" title="Guardar cambios">{saving ? '…' : 'Guardar'}</button>}
-              <button className="search-x admin-theme-toggle" onClick={onThemeToggle} aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'} title={theme === 'dark' ? 'Tema claro' : 'Tema oscuro'}>{theme === 'dark' ? '☀' : '☾'}</button>
+              <button className="search-x" onClick={onMinimize} aria-label="Minimizar administración" title="Minimizar · volver desde Admin"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 18h14"/></svg></button>
               <button className="search-x" onClick={pedirCierre} aria-label="Cerrar">×</button>
             </div>
           </div>
@@ -191,13 +236,16 @@ export default function AdminPanel({
         <div className="admin-workspace">
           <nav className="admin-tabs" aria-label="Secciones de administración">
             <span className="admin-tabs-label">Gestión</span>
-            <button className={view === 'registros' ? 'on' : ''} onClick={() => setView('registros')}><span className="admin-nav-icon">▤</span><span>Registros</span></button>
-            <button className={view === 'programa' ? 'on' : ''} onClick={() => setView('programa')}><span className="admin-nav-icon">▦</span><span className="tab-wide">Generar programa</span><span className="tab-short">Programa</span></button>
-            <button className={view === 'admins' ? 'on' : ''} onClick={() => setView('admins')}><span className="admin-nav-icon">♙</span><span className="tab-wide">Administradores</span><span className="tab-short">Admins</span></button>
+            <button className={view === 'registros' ? 'on' : ''} onClick={() => setView('registros')}><span className="admin-nav-icon"><IconList /></span><span>Registros</span></button>
+            <button className={view === 'programa' ? 'on' : ''} onClick={() => setView('programa')}><span className="admin-nav-icon"><IconCalendar /></span><span className="tab-wide">Generar programa</span><span className="tab-short">Programa</span></button>
+            <button className={view === 'otros' ? 'on' : ''} onClick={() => setView('otros')}><span className="admin-nav-icon"><IconAdmin /></span><span>Otros</span></button>
           </nav>
-          <div className="admin-view">
-            {view === 'registros' && <div className="admin-panel-sub"><span className={'admin-sync-dot' + (dirty ? ' dirty' : '')} />{draft.length} registros · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : 'sincronizado'}</div>}
-            {view === 'programa' ? <ProgramGenerator preview={preview} /> : view === 'admins' ? <AdminUsers currentEmail={currentEmail} onLogout={salir} preview={preview} /> : <>
+          <div className="admin-view" data-view={view} tabIndex={view==='registros'?0:undefined} style={{'--record-filters-height':`${filtersHeight}px`}} aria-label={view==='registros'?'Lista de registros':undefined}>
+            {view === 'registros' && <div className="admin-panel-sub"><span className={'admin-sync-dot' + (dirty ? ' dirty' : '')} />{draft.length} registros · {saving ? 'guardando…' : dirty ? 'cambios sin guardar' : preview ? 'prueba local · sin escrituras a producción' : 'sincronizado'}</div>}
+            {view === 'programa' ? <ProgramGenerator preview={preview} designPreview={designPreview} territories={data} minimized={minimized} onMinimize={onMinimize} /> : view === 'otros' ? <div className="admin-other-settings">
+          <h2>Otros</h2>
+          <ProgramWeekSettings value={programWeekStart} onSave={onProgramWeekStartChange} preview={preview}/>
+          <SplashTypeSettings value={splashType} onSave={onSplashTypeChange} preview={preview}/>
           <div className="admin-record-tools">
             <div className="admin-public-settings">
               <div className="admin-campmode">
@@ -212,19 +260,24 @@ export default function AdminPanel({
                 <button className={'admin-switch' + (metricsVisible ? ' on' : '')} disabled={saving} onClick={() => runRemote(() => onMetricsVisibleChange(!metricsVisible))} aria-label="Mostrar Métrica a usuarios públicos" aria-pressed={metricsVisible}><span className="admin-switch-knob" /></button>
               </div>
             </div>
-            <div className="admin-search"><IconSearch /><input type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Filtrar por N° de territorio" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           </div>
+          {saveError&&<p role="alert" className="admin-save-error">{saveError}</p>}
+          <AdminUsers currentEmail={currentEmail} onLogout={salir} preview={preview}/>
+          </div> : <>
+          <div className="admin-record-filters" ref={filtersRef}>
+            <div className="admin-search"><IconSearch /><input type="text" inputMode="numeric" pattern="[0-9]*" aria-label="Filtrar por número de territorio" placeholder="Filtrar por N° de territorio" value={q} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="admin-filtros">
-            {FILTROS.map((f) => <button key={f.key} className={'admin-filtro-btn' + (filtro === f.key ? ' on' : '')} onClick={() => setFiltro(f.key)}>{f.label}</button>)}
-            <div className="admin-add-row"><input className={'admin-add-terr' + (errorTerr ? ' error' : '')} placeholder="T##" value={nuevoTerr} onChange={(e) => { setNuevoTerr(e.target.value); setErrorTerr(false) }} onKeyDown={(e) => e.key === 'Enter' && agregar()} /><button className="admin-mini-btn primary" onClick={agregar}><span className="desktop-label">+ Agregar fila</span><span className="mobile-label">+ Fila</span></button></div>
+            {FILTROS.map((f) => <button key={f.key} aria-pressed={filtro===f.key} className={'admin-filtro-btn' + (filtro === f.key ? ' on' : '')} onClick={() => setFiltro(f.key)}>{f.label}</button>)}
+            {designPreview?<button type="button" className="admin-mini-btn primary" disabled={saving||!territoriosOrdenados.length} onClick={()=>{setEditingId(null);setNewRecord({id:`nuevo-${crypto.randomUUID()}`,territorio:territoriosOrdenados.find(t=>t===`T${q.replace(/\D/g,'')}`)||territoriosOrdenados[0],inicio:todayISO(),fin:null,campania:false,manzanasActivas:null,createdOrder:Date.now()})}}>+ Agregar registro</button>:<div className="admin-add-row"><input className={'admin-add-terr' + (errorTerr ? ' error' : '')} placeholder="T##" value={nuevoTerr} onChange={(e) => { setNuevoTerr(e.target.value); setErrorTerr(false) }} onKeyDown={(e) => e.key === 'Enter' && agregar()} /><button className="admin-mini-btn primary" onClick={agregar}><span className="desktop-label">+ Agregar fila</span><span className="mobile-label">+ Fila</span></button></div>}
+          </div>
           </div>
           {errorTerr && <div className="admin-add-error">Ese territorio no existe.</div>}
-          {editingRow && <div className={'admin-editor-card' + (editingRow.inicio && !editingRow.fin ? ' activo' : '')}>
+          {editingRow && <RecordEditorSurface modal={designPreview} preview={preview} title={newRecord?'Agregar registro':`Editar ${editingRow.territorio}`} isNew={!!newRecord} saving={saving} onClose={closeEditor} onDone={finishEditor} onDelete={!newRecord?()=>eliminar(editingRow):undefined}>{designPreview?<RecordFields record={editingRow} territories={territoriosOrdenados} blocks={manzanasPorTerritorio[editingRow.territorio]||[]} campaignEnabled={campModoOn} saving={saving} onChange={(field,value)=>editar(editingRow,field,value)} onTerritory={value=>cambiarTerritorio(editingRow,value)} onBlock={number=>alternarManzana(editingRow,number)} />:<div className={'admin-editor-card' + (editingRow.inicio && !editingRow.fin ? ' activo' : '')}>
             <div className="admin-accordion-head">
-              <strong>Editar {editingRow.territorio}</strong>
+              <strong>{newRecord?'Nuevo registro':`Editar ${editingRow.territorio}`}</strong>
               <div className="admin-accordion-actions">
-                <button className="admin-row-done" onClick={() => setEditingId(null)} aria-label="Terminar edición">✓</button>
-                <button className="admin-mini-btn ghost danger" disabled={saving} onClick={() => eliminar(editingRow)}>Eliminar</button>
+                <button className="admin-row-done" onClick={finishEditor} aria-label="Terminar edición">✓</button>
+                {!newRecord&&<button className="admin-mini-btn ghost danger" disabled={saving} onClick={() => eliminar(editingRow)}>Eliminar</button>}
               </div>
             </div>
             <div className="admin-accordion-grid">
@@ -244,17 +297,18 @@ export default function AdminPanel({
                 <small>Las que desactives aparecerán tachadas al abrir el territorio.</small>
               </div>}
             </div>
-          </div>}
+          </div>}</RecordEditorSurface>}
           <div className="admin-table-wrap"><table className="admin-table">
-            <thead><tr><th>Terr.</th><th>Inicio</th><th>Fin</th><th>C</th><th /></tr></thead>
+            <caption className="record-table-caption">Registros de territorio <span>{visibles.length} {visibles.length===1?'registro':'registros'}</span></caption>
+            <thead><tr><th scope="col">Terr.</th><th scope="col">Inicio</th><th scope="col">Fin</th><th scope="col">Campaña</th><th scope="col"><span className="record-sr-only">Editar</span></th></tr></thead>
             <tbody>
               {!visibles.length && <tr><td colSpan={5} className="admin-table-empty">Sin filas para este filtro.</td></tr>}
               {visibles.filter((f) => f.id !== editingId).map((f) => {
                 return <tr key={f.id} className={f.inicio && !f.fin ? 'activo' : ''} onClick={() => setEditingId(f.id)}>
                   <td className="admin-table-terr" data-label="Territorio"><strong>{f.territorio}</strong></td>
-                  <td data-label="Inicio"><span>{fechaCorta(f.inicio)}</span></td>
-                  <td data-label="Fin"><span className={!f.fin ? 'admin-active-text' : ''}>{f.fin ? fechaCorta(f.fin) : 'Activo'}</span></td>
-                  <td data-label="Campaña">{f.campania ? <span className="admin-c-badge">C</span> : <span className="admin-c-empty">—</span>}</td>
+                  <td data-label="Inicio"><time dateTime={f.inicio||undefined}>{fechaCorta(f.inicio)}</time></td>
+                  <td data-label="Fin">{f.fin?<time dateTime={f.fin}>{fechaCorta(f.fin)}</time>:<span className={f.inicio?'record-started':'record-pending'}>{f.inicio?'Empezado':'Sin iniciar'}</span>}</td>
+                  <td data-label="Campaña">{f.campania ? <span className="admin-c-badge">Campaña</span> : <span className="admin-c-empty">—</span>}</td>
                   <td className="admin-row-delete"><button className="admin-row-open" onClick={(e) => { e.stopPropagation(); setEditingId(f.id) }} aria-label={`Editar ${f.territorio}`}>›</button></td>
                 </tr>
               })}
@@ -264,6 +318,7 @@ export default function AdminPanel({
             </>}
           </div>
         </div>
+        {discardRequest&&<DiscardChangesDialog message={discardRequest.message} confirmLabel={discardRequest.confirmLabel} onCancel={()=>setDiscardRequest(null)} onConfirm={()=>{const action=discardRequest.action;setDiscardRequest(null);action()}}/>}
       </div>
     </div>
   )

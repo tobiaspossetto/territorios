@@ -1,0 +1,36 @@
+.app-v2.design-poc .date-calendar-trigger, .app-v2 .date-calendar-trigger {
+  display:flex; align-items:center; justify-content:center; flex:0 0 30px;
+  width:30px; min-width:30px; height:30px; min-height:30px; padding:5px;
+  border:0; border-radius:4px; background:transparent; color:var(--dp-accent,#725398); cursor:pointer;
+}
+.date-calendar-trigger svg { width:18px; height:18px; }
+.date-calendar-trigger[data-focus-visible], .date-calendar-nav[data-focus-visible] { outline:2px solid currentColor; outline-offset:1px; }
+.date-calendar-trigger[data-disabled] { opacity:.45; cursor:default; }
+.date-calendar-hint { display:block; margin-top:4px; color:var(--dp-danger,#88312b); font-size:11px; line-height:1.4; }
+/* The portal stays inside the native modal for focus, but may extend beyond it.
+   The editor body retains its own scroll container. */
+.app-v2.design-poc .programa-edit-dialog:has(.date-calendar-popover) { overflow:visible; }
+.date-calendar-layer { position:fixed; inset:0; pointer-events:none; z-index:100000; }
+.date-calendar-popover {
+  z-index:10000; pointer-events:auto; box-sizing:border-box; max-width:calc(100vw - 24px); overflow:auto;
+  padding:12px; border:1px solid var(--dp-border,var(--border,#bdbdbd)); border-radius:8px;
+  background:var(--dp-surface,var(--card,#fff)); color:var(--dp-text,var(--txt,#292929));
+  box-shadow:0 6px 22px #0002; font-family:inherit;
+}
+.date-calendar-dialog { outline:none; }
+.date-calendar-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.date-calendar-heading h2 { margin:0; font-size:14px; font-weight:600; text-transform:capitalize; }
+.app-v2 .date-calendar-nav {
+  display:grid; place-items:center; width:36px; height:36px; min-height:36px; padding:0;
+  border:0; border-radius:4px; background:transparent; color:inherit; font-size:26px; cursor:pointer;
+}
+.date-calendar table { border-collapse:separate; border-spacing:2px; }
+.date-calendar th { padding:3px 0; font-size:11px; font-weight:500; color:var(--dp-muted,var(--muted,#626262)); }
+.date-calendar td { padding:0; }
+.date-calendar-cell { display:grid; place-items:center; width:36px; height:36px; border-radius:5px; font-size:13px; cursor:pointer; outline:none; }
+.date-calendar-cell[data-hovered] { background:color-mix(in srgb,currentColor 10%,transparent); }
+.date-calendar-cell[data-selected] { background:var(--dp-accent,#725398); color:var(--dp-on-accent,#fff); }
+.date-calendar-cell[data-today]:not([data-selected]) { box-shadow:inset 0 0 0 1px currentColor; font-weight:700; }
+.date-calendar-cell[data-focus-visible] { outline:2px solid currentColor; outline-offset:1px; }
+.date-calendar-cell[data-outside-month] { visibility:hidden; }
+.date-calendar-cell[data-disabled],.date-calendar-cell[data-unavailable] { opacity:.35; cursor:default; }

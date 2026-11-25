@@ -1,0 +1,142 @@
+{
+  "manifest": [
+    {
+      "id": "predicacion",
+      "name": "Predicación histórica",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-62063564-b84e-4d90-b897-e988725cabfd.png"
+    },
+    {
+      "id": "publicaciones",
+      "name": "Publicaciones",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-2fa19a63-b29f-4b2b-9f8d-b3b453d9d5b9.png"
+    },
+    {
+      "id": "prensa",
+      "name": "Prensa y cine",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-5dcab4c8-48ac-4591-8f38-e4b6b83f58ce.png"
+    },
+    {
+      "id": "biblia",
+      "name": "Biblia",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-5b237c7f-1298-4c4a-85d4-c0f7f375a85e.png"
+    },
+    {
+      "id": "estudio",
+      "name": "Estudio",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-996431ee-023f-480c-897d-443a50476947.png"
+    },
+    {
+      "id": "predicadoras",
+      "name": "Predicadoras",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-25ceb6cc-1755-4e41-b229-9ffbe7acc152.png"
+    },
+    {
+      "id": "asamblea",
+      "name": "Asamblea",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-7bbc4bf3-8f63-4952-9db2-b13da6102368.png"
+    },
+    {
+      "id": "reunion",
+      "name": "Reunión al aire libre",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-8acce2fa-3373-4c1c-9b27-177ef38a9632.png"
+    },
+    {
+      "id": "carritos",
+      "name": "Carritos",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-de938ab8-ef9c-4815-abf2-c49be224875c.png"
+    },
+    {
+      "id": "reconstruccion",
+      "name": "Reconstrucción",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-79ab10df-c451-49ae-86a9-8d97ffbc6c96.png"
+    },
+    {
+      "id": "construccion",
+      "name": "Construcción",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-81755156-d42b-4c32-8690-3e334c5f1968.png"
+    },
+    {
+      "id": "comunidad",
+      "name": "Comunidad",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-b779919a-93e3-4963-86dd-aab504e6945e.png"
+    },
+    {
+      "id": "radio",
+      "name": "Radio WBBR",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-100f8c06-3e77-4f85-8945-2a919ebd6001.png"
+    },
+    {
+      "id": "salon",
+      "name": "Salón y congregación",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-44d33725-b4b8-48cb-a268-50b33854ab00.png"
+    },
+    {
+      "id": "camioneta",
+      "name": "Camioneta",
+      "source": "/Users/tobias/.codex/generated_images/01a0cec1-2ec9-7702-bce9-66a95427fbab/exec-099de1e7-d71b-4428-96ca-d099afacbe94.png"
+    }
+  ],
+  "base": "Use case: precise-object-edit. Make ONE high-resolution standalone transparent-background illustration, NOT a collage, atlas or sprite sheet. Reference is the source artwork. Reconstruct ONLY the specified subject faithfully, with crisp details at large size instead of enlarging a blurry crop. Preserve its original vintage sepia cut-paper/watercolor style, original composition and story. Square canvas, the whole subject centered, maximum dimension fills about 78% of canvas, generous fully transparent margins. ABSOLUTELY no background rectangle, no paper backdrop, no vignette, glow, gradients behind subject, fog or stray fragments. Genuine transparent RGBA background outside the actual illustrated silhouette; no opaque white or black background. Color scheme must be readable on BOTH off-white #FDFDFB and charcoal #1E1C19 WITHOUT any CSS filter or blend mode: dominant medium luminous copper #B87845 and warm bronze #C18A59, warm parchment highlights #E5D2B0, dark brown #61361F only in small line details. Avoid nearly-black filled silhouettes. Subtle copper edge definition and warm highlights. No new props or unrelated pieces. No captions or labels.",
+  "subjects": [
+    [
+      "predicacion",
+      "the historic preaching couple at the upper left: man in hat holding an unfolded paper/map, woman slightly behind with handbag. Full figures, original poses."
+    ],
+    [
+      "publicaciones",
+      "the assortment of books/publications and two tablet devices plus small disc at the top center. Preserve the original arrangement as a single isolated still-life group."
+    ],
+    [
+      "prensa",
+      "the vintage CREATION newspaper and stacked film reels at the upper right. Preserve headline CREATION, no need for tiny body text."
+    ],
+    [
+      "biblia",
+      "the open Bible at upper middle, gently curved cream pages and warm copper cover, ribbon marker, wide open-book composition."
+    ],
+    [
+      "estudio",
+      "the small group of four people studying together seated at a shared table near upper center. Original side-angle composition, whole table/chairs/people."
+    ],
+    [
+      "predicadoras",
+      "the two female preachers standing together at upper center-right, holding a book/paper and shoulder bags. Full figures and original poses."
+    ],
+    [
+      "asamblea",
+      "the oval assembly stadium building at upper right-middle, complete roof structure and building base. No surrounding unrelated figures."
+    ],
+    [
+      "reunion",
+      "the congregation seated under an outdoor canopy at middle left with a standing speaker and vintage wheel nearby. Complete isolated scene."
+    ],
+    [
+      "carritos",
+      "the couple standing by two literature display carts at middle right, full people and full carts, preserving original side-by-side arrangement."
+    ],
+    [
+      "reconstruccion",
+      "the damaged house and three people doing relief/rebuilding work at middle left. Complete copper-roof house, small debris belonging to that scene, no excavator."
+    ],
+    [
+      "construccion",
+      "the excavator at lower center with its bucket, tracks, small soil mound and the two upright construction columns on the right. Faithful whole machine, no pieces of nearby scenes."
+    ],
+    [
+      "comunidad",
+      "the small row of community members at lower right-middle, all original figures as a single group, full bodies, no truck parts."
+    ],
+    [
+      "radio",
+      "the vintage WBBR broadcast microphone at lower left, entire microphone and stand, preserve letters W B B R vertically on the stem."
+    ],
+    [
+      "salon",
+      "the rustic meeting hall and congregation gathered in front at lower left-center. Whole hall, roof and foreground group, preserve original arrangement."
+    ],
+    [
+      "camioneta",
+      "the vintage loudspeaker van at lower right, entire van in side view with both horns on roof and both wheels. Preserve JEHOVAH'S WITNESSES lettering in cream. No cropped feet or nearby community group."
+    ]
+  ]
+}

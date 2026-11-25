@@ -79,6 +79,14 @@ export const IconList = (p) => (
   </svg>
 )
 
+export const IconCalendar = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3.5" y="5.5" width="17" height="15" rx="2.5" />
+    <path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" />
+    <path d="M8 14h2M14 14h2M8 17h2M14 17h2" />
+  </svg>
+)
+
 export const IconExpand = (p) => (
   <svg {...base} {...p}>
     <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />

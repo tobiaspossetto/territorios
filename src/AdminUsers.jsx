@@ -29,6 +29,11 @@ export default function AdminUsers({ currentEmail, onLogout, preview = false }) 
 
   const agregar = async (e) => {
     e.preventDefault(); setBusy(true); setError('')
+    if (preview) {
+      const normalized=email.trim().toLowerCase()
+      setAdmins(rows=>rows.some(row=>row.email===normalized)?rows:[...rows,{id:normalized,email:normalized}])
+      setEmail(''); setBusy(false); return
+    }
     try { await addAdminEmail(email); setEmail('') }
     catch (err) { setError(err.message === 'invalid-email' ? 'Ingresá un correo válido.' : 'No se pudo agregar el administrador.') }
     finally { setBusy(false) }
@@ -36,6 +41,7 @@ export default function AdminUsers({ currentEmail, onLogout, preview = false }) 
 
   const quitar = async (row) => {
     if (!window.confirm(`¿Quitar el acceso de ${row.email}?`)) return
+    if (preview) { setAdmins(rows=>rows.filter(item=>item.email!==row.email)); return }
     setBusy(true); setError('')
     try { await removeAdminEmail(row.email) }
     catch (err) { console.error(err); setError('No se pudo quitar el administrador.') }
